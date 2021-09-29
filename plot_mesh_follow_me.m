@@ -5,8 +5,10 @@ function plot_mesh_follow_me(cfg, mesh)
 %       plot_mesh_follow_me(cfg, mesh)
 % 
 % Where:
+%   mesh = 1 x N cell array of triangulated meshes (each must contain a pos
+%   and tri field)
 %
-% cfg is a configuration structure that contains the following fields:
+%   cfg is a configuration structure that contains the following fields:
 %       fig_size    = [width height], size of the figure (relative to overall screen size)
 %       facecolor   = 1 x N cell array, each cell can either be an [r g b] 
 %                     color triplet or name of a color in the 'colors' folder 
