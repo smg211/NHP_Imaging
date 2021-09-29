@@ -1,20 +1,27 @@
-Welcome! These instructions apply to the FieldTrip- and AFNI-based pipeline for volume-based registration of NHP MRIs to a template MRI, segmentation and parcellation of T1 MRIs according to atlases, creation of ROI surfaces (triangulated meshes) in native subject space, and conversion of MRI voxels within an intensity range to surfaces (e.g., for overlaying veins and/or arteries on the cortex).
+## Welcome! 
+This document applies to the FieldTrip- and AFNI-based pipeline for volume-based registration of NHP MRIs to a template MRI, segmentation and parcellation of T1 MRIs according to atlases, creation of ROI surfaces (triangulated meshes) in native subject space, and conversion of MRI voxels within an intensity range to surfaces (e.g., for overlaying veins and/or arteries on the cortex).
 
-### The functions and scripts addressed in this document are:
+## The functions and scripts addressed in this document are:
 - AFNI_PreProc_Prep.m
 - AFNI_PreProc.m
 - AFNI_Surfaces_PostProc.m
 - Voxel_to_Surface.m
 - plot_mesh_follow_me.m
 
-### Requirements:
+## Requirements:
 - FieldTrip (Matlab toolbox): https://www.fieldtriptoolbox.org/
 - Analysis of Functional NeuroImages (AFNI): https://afni.nimh.nih.gov/
 - Recommended: FreeView (part of FreeSurfer): https://surfer.nmr.mgh.harvard.edu/
 
-Each script is structured to ask you to enter the relevant parameters in the first section, and then the rest of the script is automated. 
+## This pipeline is currently set up to use AFNI's templates and atlases
+- Template: NMT v2.0
+- Cortical Atlas: Cortical Hierarchical Atlas for Rhesus Macaques (CHARM)
+- Subcortical Atlas: Subcortical Atlas for Rhesus Macaques (SARM)
+For more info: https://afni.nimh.nih.gov/pub/dist/doc/htmldoc/nonhuman/macaque_tempatl/main_toc.html
 
 ## Step-by-Step Instructions
+Each script is structured to ask you to enter the relevant parameters in the first section, and then the rest of the script is automated. 
+
 ### Step 0 (see note): AFNI_PreProc_Prep.m
 This script creates .mat files for the keys for each AFNI atlas AND sets the ACPC fiducials on the template scan. 
 
