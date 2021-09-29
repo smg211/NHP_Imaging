@@ -1,0 +1,111 @@
+<TEMPLATE_SPACE
+  space_name="NMT2"
+  generic_space="NMT2"
+  comment="The NIMH Macaque Template v2.0 orients the macaque brain in a Horsley-Clarke stereotaxic orientation, with the origin at the center of the ear bars" />
+<TEMPLATE
+  template_name="NMT_v2.0_sym"
+  dset_name="NMT_v2.0_sym/NMT_v2.0_sym.nii.gz"
+  template_space="NMT2"
+  description="Symmetric in vivo population-average NIMH Macaque Template v2 in a Horsley-Clarke stereotaxic plane" />
+<ATLAS
+  atlas_name="SARM"
+  dset_name="NMT_v2.0_sym/SARM_in_NMT_v2.0_sym.nii.gz"
+  template_space="NMT2"
+  description="The complete Subcortical Atlas of the Rhesus Macaque (SARM)"
+  comment="Hierarchical Parcellation of the Macaque Subcortex - All levels
+    Please cite:
+    Hartig R., et al, Subcortical Atlas of the Rhesus Macaque (SARM) for
+    Magnetic Resonance Imaging, NeuroImage, submitted 2020" />
+<ATLAS
+  atlas_name="SARM_Level_1"
+  dset_name="NMT_v2.0_sym/supplemental_SARM/SARM_1_in_NMT_v2.0_sym.nii.gz"
+  template_space="NMT2"
+  description="Level 1 of the Subcortical Atlas of the Rhesus Macaque (SARM)"
+  comment="Hierarchical Parcellation of the Macaque Subcortex level 1" />
+<ATLAS
+  atlas_name="SARM_Level_2"
+  dset_name="NMT_v2.0_sym/supplemental_SARM/SARM_2_in_NMT_v2.0_sym.nii.gz"
+  template_space="NMT2"
+  description="Level 2 of the Subcortical Atlas of the Rhesus Macaque (SARM)"
+  comment="Hierarchical Parcellation of the Macaque Subcortex level 2" />
+<ATLAS
+  atlas_name="SARM_Level_3"
+  dset_name="NMT_v2.0_sym/supplemental_SARM/SARM_3_in_NMT_v2.0_sym.nii.gz"
+  template_space="NMT2"
+  description="Level 3 of the Subcortical Atlas of the Rhesus Macaque (SARM)"
+  comment="Hierarchical Parcellation of the Macaque Subcortex level 3" />
+<ATLAS
+  atlas_name="SARM_Level_4"
+  dset_name="NMT_v2.0_sym/supplemental_SARM/SARM_4_in_NMT_v2.0_sym.nii.gz"
+  template_space="NMT2"
+  description="Level 4 of the Subcortical Atlas of the Rhesus Macaque (SARM)"
+  comment="Hierarchical Parcellation of the Macaque Subcortex level 4" />
+<ATLAS
+  atlas_name="SARM_Level_5"
+  dset_name="NMT_v2.0_sym/supplemental_SARM/SARM_5_in_NMT_v2.0_sym.nii.gz"
+  template_space="NMT2"
+  description="Level 5 of the Subcortical Atlas of the Rhesus Macaque (SARM)"
+  comment="Hierarchical Parcellation of the Macaque Subcortex level 5" />
+<ATLAS
+  atlas_name="SARM_Level_6"
+  dset_name="NMT_v2.0_sym/supplemental_SARM/SARM_6_in_NMT_v2.0_sym.nii.gz"
+  template_space="NMT2"
+  description="Level 6 of the Subcortical Atlas of the Rhesus Macaque (SARM)"
+  comment="Hierarchical Parcellation of the Macaque Subcortex level 6" />
+<ATLAS
+  atlas_name="CHARM"
+  dset_name="NMT_v2.0_sym/CHARM_in_NMT_v2.0_sym.nii.gz"
+  template_space="NMT2"
+  description="The complete Cortical Hierarchy Atlas of the Rhesus Macaque (CHARM)"
+  comment="Hierarchical Parcellation of the Macaque Cortex - All levels
+    Please cite:
+    Jung, B., et al, A comprehensive macaque fMRI pipeline and hierarchical
+    atlas., NeuroImage, submitted 2020" />
+<ATLAS
+  atlas_name="CHARM_Level_1"
+  dset_name="NMT_v2.0_sym/supplemental_CHARM/CHARM_1_in_NMT_v2.0_sym.nii.gz"
+  template_space="NMT2"
+  description="Level 1 of the Cortical Hierarchy Atlas of the Rhesus Macaque (CHARM)"
+  comment="Hierarchical Parcellation of the Macaque Cortex level 1" />
+<ATLAS
+  atlas_name="CHARM_Level_2"
+  dset_name="NMT_v2.0_sym/supplemental_CHARM/CHARM_2_in_NMT_v2.0_sym.nii.gz"
+  template_space="NMT2"
+  description="Level 2 of the Cortical Hierarchy Atlas of the Rhesus Macaque (CHARM)"
+  comment="Hierarchical Parcellation of the Macaque Cortex level 2" />
+<ATLAS
+  atlas_name="CHARM_Level_3"
+  dset_name="NMT_v2.0_sym/supplemental_CHARM/CHARM_3_in_NMT_v2.0_sym.nii.gz"
+  template_space="NMT2"
+  description="Level 3 of the Cortical Hierarchy Atlas of the Rhesus Macaque (CHARM)"
+  comment="Hierarchical Parcellation of the Macaque Cortex level 3" />
+<ATLAS
+  atlas_name="CHARM_Level_4"
+  dset_name="NMT_v2.0_sym/supplemental_CHARM/CHARM_4_in_NMT_v2.0_sym.nii.gz"
+  template_space="NMT2"
+  description="Level 4 of the Cortical Hierarchy Atlas of the Rhesus Macaque (CHARM)"
+  comment="Hierarchical Parcellation of the Macaque Cortex level 4" />
+<ATLAS
+  atlas_name="CHARM_Level_5"
+  dset_name="NMT_v2.0_sym/supplemental_CHARM/CHARM_5_in_NMT_v2.0_sym.nii.gz"
+  template_space="NMT2"
+  description="Level 5 of the Cortical Hierarchy Atlas of the Rhesus Macaque (CHARM)"
+  comment="Hierarchical Parcellation of the Macaque Cortex level 5" />
+<ATLAS
+  atlas_name="CHARM_Level_6"
+  dset_name="NMT_v2.0_sym/supplemental_CHARM/CHARM_6_in_NMT_v2.0_sym.nii.gz"
+  template_space="NMT2"
+  description="Level 6 of the Cortical Hierarchy Atlas of the Rhesus Macaque (CHARM)"
+  comment="Hierarchical Parcellation of the Macaque Cortex level 6" />
+<ATLAS
+  atlas_name="Segmentation"
+  dset_name="NMT_v2.0_sym/NMT_v2.0_sym_segmentation.nii.gz"
+  template_space="NMT2"
+  description="A 5-class segmentation of the macaque brain." />
+<ATLAS
+ atlas_name="D99_v1.2b"
+ dset_name="NMT_v2.0_sym/D99_atlas_in_NMT_v2.0_sym.nii.gz"
+ template_space="NMT2"
+ description="D99_v1.2b"
+ comment="The D99 brain regions from the D99 macaque atlas (Reveley et al. 2017) warped to the NMT2 and refined using segmentation. Please cite the following if this atlas is used: Reveley, Colin, Audrūnas Gruslys, Frank Q. Ye, Daniel Glen, Jason Samaha, Brian E. Russ, Ziad Saad, Anil K. Seth, David A. Leopold, and Kadharbatcha S. Saleem. “Three-Dimensional Digital Template Atlas of the Macaque Brain.” Cerebral Cortex (New York, NY) 27, no. 9 (September 2017): 4463–77. https://doi.org/10.1093/cercor/bhw248."
+ ></ATLAS>

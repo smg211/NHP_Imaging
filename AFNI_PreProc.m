@@ -3,12 +3,23 @@
 
 %% ENTER SETTINGS
 clear all
-template_base_dir = '/Users/Sandon/Dropbox/Ganguly_Lab/Data/NHP/Imaging/NMT_v2.0_sym'; 
-template_dir = [template_base_dir filesep 'NMT_v2.0_sym_05mm'];
 img_dir = '/Users/Sandon/Box/Data/NHP_Imaging'; % path to NHP imaging data
 subid = 'Haribo'; % animal name
 scan_dir = 'ds_2021-08-26_10-07'; % name of folder where the raw DICOM files are located
 min_slices2convert = 40; % minimum number of files in an imaging directory in order to trigger aconversion to nifti
+do_run_afni_in_matlab = false; % T/F 
+% true: export the AFNI portion of the pipeline to terminal within
+% matlab (note: this will make matlab unusable while the AFNI portion of
+% the pipeline runs)
+% false: print the lines in the matlab command window that should be run in
+% a separate shell terminal
+
+%% GET PATH TO THE TEMPLATE DIRECTORY
+filePath = matlab.desktop.editor.getActiveFilename;
+i_fname = strfind(filePath, 'AFNI_PreProc');
+nhp_imaging_path = filePath(1:i_fname-2);
+template_base_dir = [nhp_imaging_path filesep 'NMT_v2.0_sym'];
+template_dir = [template_base_dir filesep 'NMT_v2.0_sym_05mm'];
 
 %% GET THE PATH TO THE RAW DICOM FOLDER AND CD TO IT
 img_dir_sub_sel = [img_dir filesep subid filesep scan_dir];
@@ -214,11 +225,11 @@ skullstrip_mask = [template_dir filesep 'NMT_v2.0_sym_05mm_brainmask.nii.gz']; %
 % @animal_warper is technically supposed to be able to do
 % @Align_Centers under the hood too, but for whatever reason, the other (non T1) scans do
 % not end up in the same space, which is why we do this step separately
-line1 = 'export PATH=$PATH:~/abin ; ' % add AFNI to the path
-line2 = 'export PATH=$PATH:/Library/Frameworks/R.framework/Versions/3.6/Resources/bin ; ' % add correct version (3.6) of R to the path
+line1 = 'export PATH=$PATH:~/abin ; '; % add AFNI to the path
+line2 = 'export PATH=$PATH:/Library/Frameworks/R.framework/Versions/3.6/Resources/bin ; '; % add correct version (3.6) of R to the path
 % note: line2 was necessary for me since I have multiple versions of R. It
 % may not be necessary for all systems.
-line3 = 'export DYLD_LIBRARY_PATH=${DYLD_LIBRARY_PATH}:/opt/X11/lib/flat_namespace ; ' % add this specific Xquartz thing to the path
+line3 = 'export DYLD_LIBRARY_PATH=${DYLD_LIBRARY_PATH}:/opt/X11/lib/flat_namespace ; '; % add this specific Xquartz thing to the path
 
 % @Align_Centers will simply deoblique all of the subject scans at once,
 % keeping them in the same space (note: this ONLY works if the scans are all 
@@ -226,7 +237,7 @@ line3 = 'export DYLD_LIBRARY_PATH=${DYLD_LIBRARY_PATH}:/opt/X11/lib/flat_namespa
 line4 = ['@Align_Centers' ... % see above
   ' -base ' base ...
   ' -dset ' input_path '.nii' ...
-  ' -child ' child_path ' ; ']
+  ' -child ' child_path ' ; '];
 
 
 % @animal_warper does the heavy lifting of volume-based registration,
@@ -245,12 +256,18 @@ line5 = ['@animal_warper' ... % start of @animal_warper
   ' -outdir ' aw_dir ...
   ' -align_centers_meth OFF' ...
   ' -aff_move_opt OFF' ...
-  ' -ok_to_exist']
+  ' -ok_to_exist'];
 
-% Either copy paste the output of line1-5 from the command window to
-% terminal to run in shell (so you can still use matlab) or run this next
-% line:
-% system([line1 line2 line3 line4 line5]);
+if do_run_afni_in_matlab
+  system([line1 line2 line3 line4 line5]);
+else
+  line1
+  line2
+  line3
+  line4
+  line5
+  fprintf('Copy-paste the above lines (in order) in a separate terminal before continuing to the final step\n');
+end
 
 % If you get an error, run this check:
 % system(['export PATH=$PATH:~/abin ; ' ... % add AFNI to the path

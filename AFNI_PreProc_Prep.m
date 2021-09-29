@@ -3,11 +3,14 @@
 % THIS ONLY NEEDS TO BE RUN ONCE (NOT FOR EACH SUBJECT), BUT MUST BE RUN
 % BEFORE AFNI_PreProc
 
-%% enter paths
-template_base_dir = '/Users/Sandon/Dropbox/Ganguly_Lab/Data/NHP/Imaging/NMT_v2.0_sym';
-template_dir = [template_dir filesep 'NMT_v2.0_sym_05mm'];
+%% GET PATH TO THE TEMPLATE DIRECTORY
+filePath = matlab.desktop.editor.getActiveFilename;
+i_fname = strfind(filePath, 'AFNI_PreProc_Prep');
+nhp_imaging_path = filePath(1:i_fname-2);
+template_base_dir = [nhp_imaging_path filesep 'NMT_v2.0_sym'];
+template_dir = [template_base_dir filesep 'NMT_v2.0_sym_05mm'];
 
-%% Create a structure containing all the ROI labels for each level of the atlases
+%% CREATE A STRUCTURE CONTAINING ALL THE ROI LABELS FOR EACH LEVEL OF THE ATLASES
 atlas_abbrevs = {'CHARM', 'SARM'};
 
 for at = 1:length(atlas_abbrevs)

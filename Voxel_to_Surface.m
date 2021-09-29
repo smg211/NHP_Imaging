@@ -9,8 +9,6 @@
 
 %% ENTER SETTINGS
 clear all
-template_base_dir = '/Users/Sandon/Dropbox/Ganguly_Lab/Data/NHP/Imaging/NMT_v2.0_sym'; 
-template_dir = [template_base_dir filesep 'NMT_v2.0_sym_05mm'];
 img_dir = '/Users/Sandon/Box/Data/NHP_Imaging'; % path to NHP imaging data
 subid = 'Haribo'; % animal name
 scan_dir = 'ds_2021-08-26_10-07'; % name of folder where the raw DICOM files are located
@@ -20,6 +18,12 @@ sm_iter = 100; % int, number of smoothing iterations (higher number = more smoot
 expansion_factor = 1.05; % scalar, multiplicative factor for expanding the brainmask 
 % (1.00 = only voxels within the brain will be kept. As this scalar
 % increases, voxels farther from the brain will be kept.)
+do_run_afni_in_matlab = false; % T/F 
+% true: export the AFNI portion of the pipeline to terminal within
+% matlab (note: this will make matlab unusable while the AFNI portion of
+% the pipeline runs)
+% false: print the lines in the matlab command window that should be run in
+% a separate shell terminal
 
 %% CREATE A MASK OF VOXELS WITHIN A CERTAIN INTENSITY WINDOW FOR A SPECIFIC 
 % SCAN (E.G., an MRV), THEN MAKE A SURFACE FROM THAT MASK, AND PLOT IT OVER
@@ -52,12 +56,15 @@ ft_volumewrite(cfg, img_thresh);
 line1 = ['IsoSurface -input ' preproc_dir filesep img_pref '_nmt2_reslice_shft_thresh.nii ' ...
   '-isoval 1 ' ...
   '-Tsmooth 0.1 100 ' ...
-  '-o_gii ' subsurfdir filesep img_pref '_nmt2_reslice_shft_thresh_surf.gii']
-% Either copy paste the output of line1-5 from the command window to
-% terminal to run in shell (so you can still use matlab) or run this next
-% line:
-% system(line1)
+  '-o_gii ' subsurfdir filesep img_pref '_nmt2_reslice_shft_thresh_surf.gii'];
+if do_run_afni_in_matlab
+  system(line1)
+else
+  line1
+  fprintf('Copy-paste the above line in a separate terminal before continuing to the next step\n');
+end
 
+%% LOAD, SMOOTH, AND PLOT THE RESULTING SURFACE
 % Load the surface that you made with AFNI
 thresh_surf = ft_read_headshape([subsurfdir filesep img_pref '_nmt2_reslice_shft_thresh_surf.gii'], ...
   'format', 'gifti', 'coordsys', 'acpc', 'unit', 'mm');
@@ -163,13 +170,15 @@ ft_volumewrite(cfg, img_thresh_mask);
 line1 = ['IsoSurface -input ' preproc_dir filesep img_pref '_nmt2_reslice_shft_thresh_mask.nii ' ...
   '-isoval 1 ' ...
   '-Tsmooth 0.1 100 ' ...
-  '-o_gii ' subsurfdir filesep img_pref '_nmt2_reslice_shft_thresh_mask_surf.gii']
-% Either copy paste the output of line1-5 from the command window to
-% terminal to run in shell (so you can still use matlab) or run this next
-% line:
-% system(line1)
+  '-o_gii ' subsurfdir filesep img_pref '_nmt2_reslice_shft_thresh_mask_surf.gii'];
+if do_run_afni_in_matlab
+  system(line1)
+else
+  line1
+  fprintf('Copy-paste the above line in a separate terminal before continuing to the next step\n');
+end
 
-% Load the surface that you made with AFNI
+%% LOAD, SMOOTH, AND PLOT THE RESULTING SURFACE
 thresh_mask_surf = ft_read_headshape([subsurfdir filesep img_pref '_nmt2_reslice_shft_thresh_mask_surf.gii'], ...
   'format', 'gifti', 'coordsys', 'acpc', 'unit', 'mm');
 

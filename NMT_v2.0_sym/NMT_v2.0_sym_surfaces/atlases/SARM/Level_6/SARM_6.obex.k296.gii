@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE GIFTI SYSTEM "http://gifti.projects.nitrc.org/gifti.dtd">
+<GIFTI Version="1.0"  NumberOfDataArrays="2">
+   <MetaData>
+      <MD>
+         <Name><![CDATA[gifticlib-version]]></Name>
+         <Value><![CDATA[gifti library version 1.16, 2 May, 2017]]></Value>
+      </MD>
+   </MetaData>
+   <LabelTable/>
+   <DataArray Intent="NIFTI_INTENT_POINTSET"
+              DataType="NIFTI_TYPE_FLOAT32"
+              ArrayIndexingOrder="RowMajorOrder"
+              Dimensionality="2"
+              Dim0="36"
+              Dim1="3"
+              Encoding="Base64Binary"
+              Endian="LittleEndian"
+              ExternalFileName=""
+              ExternalFileOffset="">
+      <MetaData>
+         <MD>
+            <Name><![CDATA[AnatomicalStructurePrimary]]></Name>
+            <Value><![CDATA[Unknown]]></Value>
+         </MD>
+         <MD>
+            <Name><![CDATA[AnatomicalStructureSecondary]]></Name>
+            <Value><![CDATA[Unknown]]></Value>
+         </MD>
+         <MD>
+            <Name><![CDATA[GeometricType]]></Name>
+            <Value><![CDATA[Unknown]]></Value>
+         </MD>
+         <MD>
+            <Name><![CDATA[UniqueID]]></Name>
+            <Value><![CDATA[XYZ_erfUq41jkWwFidQgFy5qeg]]></Value>
+         </MD>
+         <MD>
+            <Name><![CDATA[date]]></Name>
+            <Value><![CDATA[Mon Sep 28 17:42:13 2020]]></Value>
+         </MD>
+      </MetaData>
+      <CoordinateSystemTransformMatrix>
+         <DataSpace><![CDATA[NIFTI_XFORM_UNKNOWN]]></DataSpace>
+         <TransformedSpace><![CDATA[NIFTI_XFORM_UNKNOWN]]></TransformedSpace>
+         <MatrixData>
+            1.000000 0.000000 0.000000 0.000000 
+            0.000000 1.000000 0.000000 0.000000 
+            0.000000 0.000000 1.000000 0.000000 
+            0.000000 0.000000 0.000000 1.000000 
+         </MatrixData>
+      </CoordinateSystemTransformMatrix>
+      <Data>AAAgPwAAFMEAAJzAAADAPgAAEMEAAJzAAAAgPwAAEMEAAJzAAAAgPwAAFsEAAJjAAAAAPwAAFMEAAJjAAADAPgAAEsEAAJjAAABAPwAAFMEAAJjAAAAgPwAAFMEAAJTAAABgPwAAFMEAAJTAAACAPgAAEMEAAJjAAADAPgAADsEAAJjAAADAPgAAEMEAAJTAAABAPwAAEMEAAJjAAAAgPwAADsEAAJjAAABgPwAAEMEAAJTAAABgPwAAFsEAAJDAAABAPwAAFMEAAJDAAAAgPwAAEsEAAJDAAACAPwAAFMEAAJDAAABgPwAAFMEAAIzAAACQPwAAFMEAAIzAAAAAPwAAEMEAAJDAAAAgPwAADsEAAJDAAAAgPwAAEMEAAIzAAACAPwAAEMEAAJDAAABgPwAADsEAAJDAAACQPwAAFsEAAIjAAACAPwAAFMEAAIjAAABgPwAAEsEAAIjAAACgPwAAFMEAAIjAAACQPwAAEsEAAIjAAACQPwAAFMEAAITAAABAPwAAEMEAAIjAAACAPwAAEMEAAIjAAABgPwAADsEAAIjAAABgPwAAEMEAAITA</Data>
+   </DataArray>
+   <DataArray Intent="NIFTI_INTENT_TRIANGLE"
+              DataType="NIFTI_TYPE_INT32"
+              ArrayIndexingOrder="RowMajorOrder"
+              Dimensionality="2"
+              Dim0="70"
+              Dim1="3"
+              Encoding="Base64Binary"
+              Endian="LittleEndian"
+              ExternalFileName=""
+              ExternalFileOffset="">
+      <MetaData>
+         <MD>
+            <Name><![CDATA[TopologicalType]]></Name>
+            <Value><![CDATA[Open]]></Value>
+         </MD>
+         <MD>
+            <Name><![CDATA[UniqueID]]></Name>
+            <Value><![CDATA[XYZ_I_7hA-93eWMRRMcCgc5hsg]]></Value>
+         </MD>
+         <MD>
+            <Name><![CDATA[date]]></Name>
+            <Value><![CDATA[Mon Sep 28 17:42:13 2020]]></Value>
+         </MD>
+      </MetaData>
+      <Data>AwAAAAQAAAAAAAAAAAAAAAYAAAADAAAABQAAAAkAAAABAAAABQAAAAEAAAAEAAAAAQAAAAAAAAAEAAAAAQAAAAIAAAAAAAAABgAAAAAAAAAMAAAADAAAAAAAAAACAAAACQAAAAoAAAABAAAAAQAAAAoAAAACAAAAAgAAAAoAAAANAAAAAgAAAA0AAAAMAAAABwAAAAQAAAADAAAADwAAAAcAAAAQAAAADwAAAAMAAAAHAAAADwAAAAgAAAAGAAAAAwAAAA8AAAAGAAAACAAAABIAAAAPAAAACwAAAAkAAAAFAAAAFQAAAAsAAAAFAAAAFQAAAAUAAAAEAAAAEQAAABUAAAAEAAAABwAAABEAAAAEAAAADAAAAAcAAAAGAAAAEQAAAAwAAAAHAAAADgAAABEAAAAMAAAAEAAAAA4AAAARAAAACAAAABAAAAAOAAAAEgAAAAgAAAAYAAAAGAAAAAgAAAAOAAAACwAAAAoAAAAJAAAAFQAAABYAAAALAAAAFgAAAAoAAAALAAAAFgAAAA0AAAAKAAAADAAAAA0AAAAOAAAADQAAABkAAAAOAAAADQAAABYAAAAZAAAADgAAABkAAAAYAAAAEwAAABAAAAAPAAAAGgAAABMAAAAbAAAAGgAAAA8AAAATAAAAGgAAABQAAAASAAAADwAAABoAAAASAAAAFAAAAB0AAAAaAAAAFwAAABUAAAARAAAAIAAAABcAAAARAAAAIAAAABEAAAAQAAAAHAAAACAAAAAQAAAAEwAAABwAAAAQAAAAGwAAABwAAAATAAAAIQAAABQAAAAeAAAAEgAAACEAAAAUAAAAGAAAABIAAAAhAAAAFAAAAB4AAAAdAAAAFwAAABYAAAAVAAAAIAAAACIAAAAXAAAAIgAAABYAAAAXAAAAIgAAABkAAAAWAAAAGAAAABkAAAAhAAAAIQAAABkAAAAiAAAAHwAAABsAAAAaAAAAHQAAAB8AAAAaAAAAIwAAACAAAAAcAAAAIwAAABsAAAAcAAAAIwAAAB8AAAAbAAAAIwAAACEAAAAeAAAAHwAAACMAAAAeAAAAHgAAAB8AAAAdAAAAIwAAACIAAAAgAAAAIgAAACMAAAAhAAAA</Data>
+   </DataArray>
+</GIFTI>

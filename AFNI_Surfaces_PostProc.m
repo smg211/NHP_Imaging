@@ -3,13 +3,18 @@
 
 %% ENTER SETTINGS
 clear all
-template_base_dir = '/Users/Sandon/Dropbox/Ganguly_Lab/Data/NHP/Imaging/NMT_v2.0_sym'; 
 img_dir = '/Users/Sandon/Box/Data/NHP_Imaging'; % path to NHP imaging data
 subid = 'Haribo'; % animal name
 scan_dir = 'ds_2021-08-26_10-07'; % name of folder where the raw DICOM files are located
 sm_iter = []; % int, number of smoothing iterations (higher number = more smooth, [] = skip smoothing)
 facealpha = 1; % transparecy of each ROI
 n_distinct_colors = 15; % number of different colors you want to cycle through for coloring the ROIs
+
+%% GET PATH TO THE TEMPLATE DIRECTORY
+filePath = matlab.desktop.editor.getActiveFilename;
+i_fname = strfind(filePath, 'AFNI_Surfaces_PostProc');
+nhp_imaging_path = filePath(1:i_fname-2);
+template_base_dir = [nhp_imaging_path filesep 'NMT_v2.0_sym'];
 
 %% LOAD EACH OF THE SURFACES AND OPTIONALLY SMOOTH THEM (NOTE: SMOOTHING EVERY SURFACE WILL TAKE SEVERAL HOURS)
 % Get directory names again in case you want to start here
