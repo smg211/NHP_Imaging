@@ -66,6 +66,9 @@ set(gca, 'XColor','none')
 set(gca, 'YColor','none')
 set(gca, 'ZColor','none')
 
+% added to make axes not squish the brain
+axis('square'); 
+
 axes('buttondownfcn', @buttondownfcn);  % assign callback
 set(gca,'NextPlot','add');              % add next plot to current axis
 
