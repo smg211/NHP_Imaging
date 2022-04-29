@@ -22,7 +22,7 @@ function varargout = Fiducial_GUI(varargin)
 
 % Edit the above text to modify the response to help Fiducial_GUI
 
-% Last Modified by GUIDE v2.5 27-Apr-2022 18:20:44
+% Last Modified by GUIDE v2.5 27-Apr-2022 19:06:15
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -85,7 +85,7 @@ set(handles.mri_fname, 'String', filename)
 
 % Read this filenmae;
 mri = ft_read_mri([path filename]);
-handles.mri_filename = [path filename]; 
+handles.mri_filename = [path filename];
 
 mx = max(mri.anatomy(:));
 mn = min(mri.anatomy(:));
@@ -106,12 +106,12 @@ prep_axes(hObject, handles, mri)
 % Now plot this MRI;
 % default starting point
 ijk = [100, 100, 100];
-xyz = mri.transform * [ijk 1]'; 
+xyz = mri.transform * [ijk 1]';
 options = {'transform', eye(4),     'location', ijk, 'style', 'subplot',...
     'update',    [1, 1, 1], 'doscale',  false,   'clim',  handles.clim,...
     'parents', [handles.coronal_ax, handles.sag_ax, handles.ax_ax]};
 
-% GUIDE: 
+% GUIDE:
 % ortho plot: coronal: sag: axial
 % index into xyz or ijk: R (sag), A (coronal), S (axial)
 
@@ -126,11 +126,11 @@ for i = 1:length(anahandles)
     tg = get(get(anahandles(i), 'parent'), 'tag');
     switch tg
         case 'coronal_ax'
-            handles.anahandles(1) = anahandles(i); 
+            handles.anahandles(1) = anahandles(i);
         case 'sag_ax'
-            handles.anahandles(2) = anahandles(i); 
+            handles.anahandles(2) = anahandles(i);
         case 'ax_ax'
-            handles.anahandles(3) = anahandles(i); 
+            handles.anahandles(3) = anahandles(i);
     end
 end
 
@@ -144,10 +144,10 @@ guidata(hObject, handles)
 % Update the slider min/max/values etc.
 prep_slider(hObject, handles, ana, mri)
 
-% Save the MRI stuff 
-handles.xyz = xyz; 
-handles.ana = ana; 
-handles.mri = mri; 
+% Save the MRI stuff
+handles.xyz = xyz;
+handles.ana = ana;
+handles.mri = mri;
 handles = update_MRI_coordinates(handles, xyz);
 guidata(hObject, handles);
 
@@ -163,16 +163,16 @@ function prep_axes(hObject, handles, mri)
 %     h3size(1) = 0.82*axlen1/(axlen1 + axlen2);
 %     h3size(2) = 0.82*axlen2/(axlen2 + axlen3);
 
-% pos1 = get(handles.coronal_ax, 'position'); 
-% pos1(3:4) = h1size; 
+% pos1 = get(handles.coronal_ax, 'position');
+% pos1(3:4) = h1size;
 % set(handles.coronal_ax, 'position', pos1);
-% 
-% pos2 = get(handles.sag_ax, 'position'); 
-% pos2(3:4) = h2size; 
+%
+% pos2 = get(handles.sag_ax, 'position');
+% pos2(3:4) = h2size;
 % set(handles.sag_ax, 'position', pos2);
-% 
-% pos3 = get(handles.ax_ax, 'position'); 
-% pos3(3:4) = h3size; 
+%
+% pos3 = get(handles.ax_ax, 'position');
+% pos3(3:4) = h3size;
 % set(handles.ax_ax, 'position', pos3);
 
 voxlen1 = norm(cp_head(2,:)-cp_head(1,:))/norm(cp_voxel(2,:)-cp_voxel(1,:));
@@ -185,28 +185,28 @@ set(handles.ax_ax, 'DataAspectRatio',1./[voxlen1 voxlen2 voxlen3]);
 guidata(hObject, handles);
 
 function prep_slider(hObject, handles, ana, mri)
-i_range = [0, size(ana, 1)]; 
-j_range = [0, size(ana, 2)]; 
-k_range = [0, size(ana, 3)]; 
-onz = [1, 1]; 
+i_range = [0, size(ana, 1)];
+j_range = [0, size(ana, 2)];
+k_range = [0, size(ana, 3)];
+onz = [1, 1];
 
-% transformation % 
+% transformation %
 ijk = [i_range; j_range; k_range; onz]; % 4 x 2
 xyz_range = mri.transform * ijk; % 4 x 2
 
-set(handles.sag_slider, 'Min', xyz_range(1, 1)); 
-set(handles.sag_slider, 'Max', xyz_range(1, 2)); 
+set(handles.sag_slider, 'Min', xyz_range(1, 1));
+set(handles.sag_slider, 'Max', xyz_range(1, 2));
 
-set(handles.coronal_slider, 'Min', xyz_range(2, 1)); 
-set(handles.coronal_slider, 'Max', xyz_range(2, 2)); 
+set(handles.coronal_slider, 'Min', xyz_range(2, 1));
+set(handles.coronal_slider, 'Max', xyz_range(2, 2));
 
-set(handles.ax_slider, 'Min', xyz_range(3, 1)); 
-set(handles.ax_slider, 'Max', xyz_range(3, 2)); 
+set(handles.ax_slider, 'Min', xyz_range(3, 1));
+set(handles.ax_slider, 'Max', xyz_range(3, 2));
 guidata(hObject, handles);
 
 function handles = update_MRI_coordinates(handles, xyz)
 
-handles.xyz = xyz;  
+handles.xyz = xyz;
 set(handles.sag_slider, 'Value', xyz(1))
 set(handles.coronal_slider, 'Value', xyz(2))
 set(handles.ax_slider, 'Value', xyz(3))
@@ -215,14 +215,73 @@ set(handles.sag_ML, 'String', num2str(xyz(1)))
 set(handles.coronal_AP, 'String', num2str(xyz(2)))
 set(handles.DV, 'String', num2str(xyz(3)))
 
-% Go from xyz to ijk; 
-inv_trans = inv(handles.mri.transform); 
-ijk = inv_trans * handles.xyz; 
-ijk = round(ijk); 
+% Go from xyz to ijk;
+inv_trans = inv(handles.mri.transform);
+ijk = inv_trans * handles.xyz;
+ijk = round(ijk);
+
 % Update images
 options = {'transform', eye(4),     'location', ijk(1:3)', 'style', 'subplot',...
     'update',    [1, 1, 1], 'doscale',  false,   'clim',  handles.clim,...
     'surfhandle', handles.anahandles};
+
+if ~isfield(handles, 'surf_toggle')
+    handles.surf_toggle = 1;
+end
+
+if isfield(handles, 'brain_surfaces')
+    if length(handles.brain_surfaces) > 0    
+        options{end+1} = 'intersectmesh';
+        options{end+1} = {};
+
+        for l = 1:length(handles.brain_surfaces)
+
+            % For this
+            options2 = options;
+            options2{end}{end+1} = handles.brain_surfaces{l}{2}; %name, ijk, list
+
+            if handles.surf_toggle == 0
+                % Delete patch
+                for i = 1:3
+                    if ~isempty(handles.brain_surfaces_handles{l})
+                        delete(handles.brain_surfaces_handles{l}(i))
+                        handles.brain_surfaces_handles{l} = []; 
+                    end
+                end
+                
+            else
+                if isempty(handles.brain_surfaces_handles{l})
+
+                    % Do the plot
+                    ft_plot_ortho(handles.ana, options2{:});
+                    patchhandles = findobj('type', 'patch')';
+
+                    for i = 1:length(patchhandles)
+                        tg = get(get(patchhandles(i), 'parent'), 'tag');
+                        switch tg
+                            case 'coronal_ax'
+
+                                handles.brain_surfaces_handles{l}(1) = patchhandles(i);
+
+                            case 'sag_ax'
+
+                                handles.brain_surfaces_handles{l}(2) = patchhandles(i);
+
+                            case 'ax_ax'
+
+                                handles.brain_surfaces_handles{l}(3) = patchhandles(i);
+
+                        end
+                    end
+                else
+                    options2{end+1} = 'patchhandle';
+                    options2{end+1}= handles.brain_surfaces_handles{l};
+                    ft_plot_ortho(handles.ana, options2{:});
+                end
+            end
+        end
+    end
+end
 
 fprintf(' i j k [%d, %d, %d], x y z [ %.1f, %.1f, %.1f]\n', ijk(1), ijk(2), ijk(3), xyz(1), xyz(2), xyz(3));
 
@@ -236,51 +295,51 @@ ft_plot_crosshair([ijk(1) ijk(2) size(handles.ana,3)], 'handle', handles.handles
 
 handles = plot_fiducials(handles);
 
- 
+
 function handles = plot_fiducials(handles)
 % Update fiducial marker
-% If within a 1mm vicinity of any position plot it; 
+% If within a 1mm vicinity of any position plot it;
 if isfield(handles, 'mri_fiducials_handles')
     delete(handles.mri_fiducials_handles)
 end
 
 
 if isfield(handles, 'mri_fiducials')
-    fid_list = handles.mri_fiducials; 
+    fid_list = handles.mri_fiducials;
     if length(fid_list) > 0
-        colors = jet(2*length(fid_list)); 
-        % Only use the warmer colors for better viewing; 
-        colors = colors(length(fid_list):end, :); 
-        handles.mri_fiducials_handles = []; 
-        inv_trans = inv(handles.mri.transform); 
-
+        colors = jet(2*length(fid_list));
+        % Only use the warmer colors for better viewing;
+        colors = colors(length(fid_list):end, :);
+        handles.mri_fiducials_handles = [];
+        inv_trans = inv(handles.mri.transform);
+        
         for i = 1:length(fid_list)
-            pos = [fid_list{i}{2} 1]; 
-            % Go from xyz to ijk; 
-            ijk = inv_trans * pos'; 
-            ijk = round(ijk); 
-
-            % Current position; 
+            pos = [fid_list{i}{2} 1];
+            % Go from xyz to ijk;
+            ijk = inv_trans * pos';
+            ijk = round(ijk);
+            
+            % Current position;
             if abs(pos(2) - handles.xyz(2)) < 1
-                set(gcf, 'currentaxes', handles.coronal_ax); 
-                hold on; 
+                set(gcf, 'currentaxes', handles.coronal_ax);
+                hold on;
                 h1 = line(ijk(1), 1, ijk(3), 'color', colors(i, :), 'Marker', '.');
                 handles.mri_fiducials_handles = [handles.mri_fiducials_handles h1];
-                hold off; 
+                hold off;
             end
             if abs(pos(3) - handles.xyz(3)) < 1
-                set(gcf, 'currentaxes', handles.ax_ax); 
-                hold on; 
+                set(gcf, 'currentaxes', handles.ax_ax);
+                hold on;
                 h2 = line(ijk(1),ijk(2), size(handles.ana,3), 'color', colors(i, :),'Marker', '.');
-                handles.mri_fiducials_handles = [handles.mri_fiducials_handles h2]; 
-                hold off; 
+                handles.mri_fiducials_handles = [handles.mri_fiducials_handles h2];
+                hold off;
             end
             if abs(pos(1) - handles.xyz(1)) < 1
-                set(gcf, 'currentaxes', handles.sag_ax); 
-                hold on; 
+                set(gcf, 'currentaxes', handles.sag_ax);
+                hold on;
                 h3 = line(size(handles.ana, 1), ijk(2),ijk(3), 'color', colors(i, :), 'Marker', '.');
-                handles.mri_fiducials_handles = [handles.mri_fiducials_handles h3]; 
-                hold off; 
+                handles.mri_fiducials_handles = [handles.mri_fiducials_handles h3];
+                hold off;
             end
         end
     end
@@ -296,9 +355,9 @@ function coronal_slider_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'Value') returns position of slider
 %        get(hObject,'Min') and get(hObject,'Max') to determine range of slider
-xyz = handles.xyz; 
-xyz(2) = get(handles.coronal_slider, 'Value'); 
-handles.xyz = xyz; 
+xyz = handles.xyz;
+xyz(2) = get(handles.coronal_slider, 'Value');
+handles.xyz = xyz;
 handles = update_MRI_coordinates(handles, xyz);
 guidata(hObject, handles);
 
@@ -323,9 +382,9 @@ function sag_slider_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'Value') returns position of slider
 %        get(hObject,'Min') and get(hObject,'Max') to determine range of slider
-xyz = handles.xyz; 
-xyz(1) = get(handles.sag_slider, 'Value'); 
-handles.xyz = xyz; 
+xyz = handles.xyz;
+xyz(1) = get(handles.sag_slider, 'Value');
+handles.xyz = xyz;
 handles = update_MRI_coordinates(handles, xyz);
 guidata(hObject, handles);
 
@@ -349,9 +408,9 @@ function ax_slider_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'Value') returns position of slider
 %        get(hObject,'Min') and get(hObject,'Max') to determine range of slider
-xyz = handles.xyz;  
-xyz(3) = get(handles.ax_slider, 'Value'); 
-handles.xyz = xyz; 
+xyz = handles.xyz;
+xyz(3) = get(handles.ax_slider, 'Value');
+handles.xyz = xyz;
 handles = update_MRI_coordinates(handles, xyz);
 guidata(hObject, handles);
 
@@ -376,9 +435,9 @@ function coronal_AP_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of coronal_AP as text
 %        str2double(get(hObject,'String')) returns contents of coronal_AP as a double
-xyz = handles.xyz; 
-xyz(2) = str2double(get(handles.coronal_AP, 'String')); 
-handles.xyz = xyz; 
+xyz = handles.xyz;
+xyz(2) = str2double(get(handles.coronal_AP, 'String'));
+handles.xyz = xyz;
 handles = update_MRI_coordinates(handles, xyz);
 guidata(hObject, handles);
 
@@ -403,9 +462,9 @@ function sag_ML_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of coronal_AP as text
 %        str2double(get(hObject,'String')) returns contents of coronal_AP as a double
-xyz = handles.xyz; 
-xyz(1) = str2double(get(handles.sag_ML, 'String')); 
-handles.xyz = xyz; 
+xyz = handles.xyz;
+xyz(1) = str2double(get(handles.sag_ML, 'String'));
+handles.xyz = xyz;
 handles = update_MRI_coordinates(handles, xyz);
 guidata(hObject, handles);
 
@@ -430,9 +489,9 @@ function DV_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of DV as text
 %        str2double(get(hObject,'String')) returns contents of DV as a double
-xyz = handles.xyz; 
-xyz(3) = str2double(get(handles.DV, 'String')); 
-handles.xyz = xyz; 
+xyz = handles.xyz;
+xyz(3) = str2double(get(handles.DV, 'String'));
+handles.xyz = xyz;
 handles = update_MRI_coordinates(handles, xyz);
 guidata(hObject, handles);
 
@@ -504,19 +563,19 @@ function add_fiducial_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 newname = get(handles.fiducial_id, 'String');
 if ~isfield(handles, 'mri_fiducials')
-    handles.mri_fiducials = {}; 
+    handles.mri_fiducials = {};
 end
 
-val_in_list = length(get(handles.mri_fiducials_list, 'String')); 
+val_in_list = length(get(handles.mri_fiducials_list, 'String'));
 
 coords = [str2double(get(handles.sag_ML, 'String')),...
-    str2double(get(handles.coronal_AP, 'String')), str2double(get(handles.DV, 'String'))]; 
+    str2double(get(handles.coronal_AP, 'String')), str2double(get(handles.DV, 'String'))];
 
-handles.mri_fiducials{end+1} = {newname, coords, val_in_list+1}; 
+handles.mri_fiducials{end+1} = {newname, coords, val_in_list+1};
 
-list = get(handles.mri_fiducials_list, 'String'); 
-list{end+1} = [newname ': (' num2str(coords(1)) ',' num2str(coords(2)) ',' num2str(coords(3)) ')']; 
-set(handles.mri_fiducials_list, 'String', list); 
+list = get(handles.mri_fiducials_list, 'String');
+list{end+1} = [newname ': (' num2str(coords(1)) ',' num2str(coords(2)) ',' num2str(coords(3)) ')'];
+set(handles.mri_fiducials_list, 'String', list);
 handles = plot_fiducials(handles);
 guidata(hObject, handles);
 
@@ -526,12 +585,12 @@ function rm_fiducial_Callback(hObject, eventdata, handles)
 % hObject    handle to rm_fiducial (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-val = get(handles.mri_fiducials_list, 'Value'); 
+val = get(handles.mri_fiducials_list, 'Value');
 
-% Remove this value; 
+% Remove this value;
 for i = 1:length(handles.mri_fiducials)
     if handles.mri_fiducials{i}{3} > val
-        handles.mri_fiducials{i}{3} = handles.mri_fiducials{i}{3} - 1; 
+        handles.mri_fiducials{i}{3} = handles.mri_fiducials{i}{3} - 1;
     end
 end
 for i = 1:length(handles.mri_fiducials)
@@ -539,7 +598,7 @@ for i = 1:length(handles.mri_fiducials)
         if i == length(handles.mri_fiducials)
             handles.mri_fiducials = {handles.mri_fiducials{1:i-1}};
         elseif i == 1
-            handles.mri_fiducials = {handles.mri_fiducials{i+1:end}}; 
+            handles.mri_fiducials = {handles.mri_fiducials{i+1:end}};
         else
             handles.mri_fiducials = {handles.mri_fiducials{1:i-1}, handles.mri_fiducials{i+1:end}};
         end
@@ -547,12 +606,12 @@ for i = 1:length(handles.mri_fiducials)
     end
 end
 
-list = {}; 
+list = {};
 for i = 1:length(handles.mri_fiducials)
-    nm  = handles.mri_fiducials{i}{1}; 
+    nm  = handles.mri_fiducials{i}{1};
     coords = handles.mri_fiducials{i}{2};
-    list{end+1} = [nm ': (' num2str(coords(1)) ',' num2str(coords(2)) ',' num2str(coords(3))]; 
-    handles.mri_fiducials{i}{3} = i; 
+    list{end+1} = [nm ': (' num2str(coords(1)) ',' num2str(coords(2)) ',' num2str(coords(3))];
+    handles.mri_fiducials{i}{3} = i;
 end
 
 set(handles.mri_fiducials_list, 'String', list);
@@ -587,10 +646,10 @@ function save_mri_fiducials_Callback(hObject, eventdata, handles)
 % hObject    handle to save_mri_fiducials (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-mri_filename = handles.mri_filename; 
-fiducials_filename = [mri_filename(1:end-4) '_fiducials.mat']; 
-mri_fiducials = handles.mri_fiducials; 
-save(fiducials_filename, 'mri_fiducials'); 
+mri_filename = handles.mri_filename;
+fiducials_filename = [mri_filename(1:end-4) '_fiducials.mat'];
+mri_fiducials = handles.mri_fiducials;
+save(fiducials_filename, 'mri_fiducials');
 
 
 % --- Executes on button press in load_mri_fiducials.
@@ -599,19 +658,19 @@ function load_mri_fiducials_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 [filename, path] = uigetfile('*.mat');
-fiducials = load([path filename]); 
-handles.mri_fiducials = fiducials.mri_fiducials; 
-list = {}; 
+fiducials = load([path filename]);
+handles.mri_fiducials = fiducials.mri_fiducials;
+list = {};
 for i = 1:length(handles.mri_fiducials)
-    nm  = handles.mri_fiducials{i}{1}; 
+    nm  = handles.mri_fiducials{i}{1};
     coords = handles.mri_fiducials{i}{2};
-    list{end+1} = [nm ': (' num2str(coords(1)) ',' num2str(coords(2)) ',' num2str(coords(3))]; 
-    handles.mri_fiducials{i}{3} = i; 
+    list{end+1} = [nm ': (' num2str(coords(1)) ',' num2str(coords(2)) ',' num2str(coords(3))];
+    handles.mri_fiducials{i}{3} = i;
 end
 
 set(handles.mri_fiducials_list, 'String', list);
 
-% Plot the fiducials; 
+% Plot the fiducials;
 handles = plot_fiducials(handles);
 guidata(hObject, handles);
 
@@ -736,34 +795,34 @@ function add_stereotax_fiducial_Callback(hObject, eventdata, handles)
 % hObject    handle to add_stereotax_fiducial (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-stx_nms = get(handles.stereotax_selector, 'String'); 
-stereotax_id = get(handles.stereotax_selector, 'Value'); 
-stx_name = stx_nms{stereotax_id}; 
+stx_nms = get(handles.stereotax_selector, 'String');
+stereotax_id = get(handles.stereotax_selector, 'Value');
+stx_name = stx_nms{stereotax_id};
 
-AP_blk = str2double(get(handles.ap_blk, 'String')); 
-AP = str2double(get(handles.ap, 'String')); 
-AP = AP+ AP_blk; 
-ML = str2double(get(handles.ml, 'String')); 
-DV = str2double(get(handles.dv, 'String')); 
+AP_blk = str2double(get(handles.ap_blk, 'String'));
+AP = str2double(get(handles.ap, 'String'));
+AP = AP+ AP_blk;
+ML = str2double(get(handles.ml, 'String'));
+DV = str2double(get(handles.dv, 'String'));
 
 if ~isfield(handles, 'stereotax_fiducials')
-    handles.stereotax_fiducials = struct(); 
+    handles.stereotax_fiducials = struct();
 end
 
 if ~isfield(handles.stereotax_fiducials, stx_name)
-    handles.stereotax_fiducials.(stx_name) = {}; 
+    handles.stereotax_fiducials.(stx_name) = {};
 end
 
-val_in_list = length(get(handles.stereotax_fiducials_list, 'String')); 
+val_in_list = length(get(handles.stereotax_fiducials_list, 'String'));
 
-coords = [ML, AP, DV]; 
+coords = [ML, AP, DV];
 
 name = ['f_' num2str(val_in_list+1)];
-handles.stereotax_fiducials.(stx_name){end+1} = {name, coords, val_in_list+1}; 
+handles.stereotax_fiducials.(stx_name){end+1} = {name, coords, val_in_list+1};
 
-list = get(handles.stereotax_fiducials_list, 'String'); 
-list{end+1} = [name ': (' num2str(coords(1)) ',' num2str(coords(2)) ',' num2str(coords(3)) ')']; 
-set(handles.stereotax_fiducials_list, 'String', list); 
+list = get(handles.stereotax_fiducials_list, 'String');
+list{end+1} = [name ': (' num2str(coords(1)) ',' num2str(coords(2)) ',' num2str(coords(3)) ')'];
+set(handles.stereotax_fiducials_list, 'String', list);
 guidata(hObject, handles);
 
 % --- Executes on button press in rm_stereotax_fiducial.
@@ -772,16 +831,16 @@ function rm_stereotax_fiducial_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 % --- Executes on button press in rm_fiducial.
-stx_nms = get(handles.stereotax_selector, 'String'); 
-stereotax_id = get(handles.stereotax_selector, 'Value'); 
-stx_name = stx_nms{stereotax_id}; 
+stx_nms = get(handles.stereotax_selector, 'String');
+stereotax_id = get(handles.stereotax_selector, 'Value');
+stx_name = stx_nms{stereotax_id};
 
-val = get(handles.stereotax_fiducials_list, 'Value'); 
+val = get(handles.stereotax_fiducials_list, 'Value');
 
-% Remove this value; 
+% Remove this value;
 for i = 1:length(handles.stereotax_fiducials.(stx_name))
     if handles.stereotax_fiducials.(stx_name){i}{3} > val
-        handles.stereotax_fiducials.(stx_name){i}{3} = handles.stereotax_fiducials.(stx_name){i}{3} - 1; 
+        handles.stereotax_fiducials.(stx_name){i}{3} = handles.stereotax_fiducials.(stx_name){i}{3} - 1;
     end
 end
 for i = 1:length(handles.stereotax_fiducials.(stx_name))
@@ -789,7 +848,7 @@ for i = 1:length(handles.stereotax_fiducials.(stx_name))
         if i == length(handles.stereotax_fiducials.(stx_name))
             handles.stereotax_fiducials.(stx_name) = {handles.stereotax_fiducials.(stx_name){1:i-1}};
         elseif i == 1
-            handles.stereotax_fiducials.(stx_name) = {handles.stereotax_fiducials.(stx_name){i+1:end}}; 
+            handles.stereotax_fiducials.(stx_name) = {handles.stereotax_fiducials.(stx_name){i+1:end}};
         else
             handles.stereotax_fiducials.(stx_name) = {handles.stereotax_fiducials.(stx_name){1:i-1}, handles.stereotax_fiducials.(stx_name){i+1:end}};
         end
@@ -797,12 +856,12 @@ for i = 1:length(handles.stereotax_fiducials.(stx_name))
     end
 end
 
-list = {}; 
+list = {};
 for i = 1:length(handles.stereotax_fiducials.(stx_name))
-    nm  = handles.stereotax_fiducials.(stx_name){i}{1}; 
+    nm  = handles.stereotax_fiducials.(stx_name){i}{1};
     coords = handles.stereotax_fiducials.(stx_name){i}{2};
-    list{end+1} = [nm ': (' num2str(coords(1)) ',' num2str(coords(2)) ',' num2str(coords(3))]; 
-    handles.stereotax_fiducials.(stx_name){i}{3} = i; 
+    list{end+1} = [nm ': (' num2str(coords(1)) ',' num2str(coords(2)) ',' num2str(coords(3))];
+    handles.stereotax_fiducials.(stx_name){i}{3} = i;
 end
 
 set(handles.stereotax_fiducials_list, 'String', list);
@@ -817,24 +876,24 @@ function stereotax_selector_Callback(hObject, eventdata, handles)
 
 % Hints: contents = cellstr(get(hObject,'String')) returns stereotax_selector contents as cell array
 %        contents{get(hObject,'Value')} returns selected item from stereotax_selector
-stx_nms = get(handles.stereotax_selector, 'String'); 
-stereotax_id = get(handles.stereotax_selector, 'Value'); 
+stx_nms = get(handles.stereotax_selector, 'String');
+stereotax_id = get(handles.stereotax_selector, 'Value');
 stx_name = stx_nms{stereotax_id};
 
-list = {}; 
+list = {};
 if ~isfield(handles, 'stereotax_fiducials')
-    handles.stereotax_fiducials = struct(); 
+    handles.stereotax_fiducials = struct();
 end
 
 if ~isfield(handles.stereotax_fiducials, stx_name)
-    handles.stereotax_fiducials.(stx_name) = {}; 
+    handles.stereotax_fiducials.(stx_name) = {};
 end
 
 for i = 1:length(handles.stereotax_fiducials.(stx_name))
-    nm  = handles.stereotax_fiducials.(stx_name){i}{1}; 
+    nm  = handles.stereotax_fiducials.(stx_name){i}{1};
     coords = handles.stereotax_fiducials.(stx_name){i}{2};
-    list{end+1} = [nm ': (' num2str(coords(1)) ',' num2str(coords(2)) ',' num2str(coords(3))]; 
-    handles.stereotax_fiducials.(stx_name){i}{3} = i; 
+    list{end+1} = [nm ': (' num2str(coords(1)) ',' num2str(coords(2)) ',' num2str(coords(3))];
+    handles.stereotax_fiducials.(stx_name){i}{3} = i;
 end
 
 set(handles.stereotax_fiducials_list, 'String', list);
@@ -858,16 +917,16 @@ function save_stereotax_fiducials_Callback(hObject, eventdata, handles)
 % hObject    handle to save_stereotax_fiducials (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-mri_filename = handles.mri_filename; 
+mri_filename = handles.mri_filename;
 
-stx_nms = get(handles.stereotax_selector, 'String'); 
-stereotax_id = get(handles.stereotax_selector, 'Value'); 
+stx_nms = get(handles.stereotax_selector, 'String');
+stereotax_id = get(handles.stereotax_selector, 'Value');
 stx_name = stx_nms{stereotax_id};
 
-fiducials_filename = [mri_filename(1:end-4) '_stereotax' stx_name '.mat']; 
-stereotax_fiducials = handles.stereotax_fiducials.(stx_name); 
-stereotax_name = stx_name; 
-save(fiducials_filename, 'stereotax_fiducials', 'stereotax_name'); 
+fiducials_filename = [mri_filename(1:end-4) '_stereotax' stx_name '.mat'];
+stereotax_fiducials = handles.stereotax_fiducials.(stx_name);
+stereotax_name = stx_name;
+save(fiducials_filename, 'stereotax_fiducials', 'stereotax_name');
 
 % --- Executes on button press in load_stereotax_fiducials.
 function load_stereotax_fiducials_Callback(hObject, eventdata, handles)
@@ -875,38 +934,38 @@ function load_stereotax_fiducials_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 [filename, path] = uigetfile('*.mat');
-fiducials = load([path filename]); 
+fiducials = load([path filename]);
 
-stereotax_name = fiducials.stereotax_name; 
-nms = get(handles.stereotax_selector, 'String'); 
-stx_name = ''; 
+stereotax_name = fiducials.stereotax_name;
+nms = get(handles.stereotax_selector, 'String');
+stx_name = '';
 for i = 1:length(nms)
     if strcmp(stereotax_name, nms{i})
-        stx_name = nms{i}; 
-        set(handles.stereotax_selector, 'Value', i); 
+        stx_name = nms{i};
+        set(handles.stereotax_selector, 'Value', i);
     end
 end
 
 if strcmp(stx_name, '')
-    MException('Fiducial_GUI:load_stereotax_fiducials_Callback',['we dont support this stereotax now ' stereotax_name]); 
+    MException('Fiducial_GUI:load_stereotax_fiducials_Callback',['we dont support this stereotax now ' stereotax_name]);
 else
-
+    
     if ~isfield(handles, 'stereotax_fiducials')
-        handles.stereotax_fiducials = struct(); 
+        handles.stereotax_fiducials = struct();
     end
     if ~isfield(handles.stereotax_fiducials, stx_name)
-        handles.stereotax_fiducials.(stx_name) = {};     
+        handles.stereotax_fiducials.(stx_name) = {};
     end
-    handles.stereotax_fiducials.(stx_name) = fiducials.stereotax_fiducials; 
+    handles.stereotax_fiducials.(stx_name) = fiducials.stereotax_fiducials;
     
-    list = {}; 
+    list = {};
     for i = 1:length(handles.stereotax_fiducials.(stx_name))
-        nm  = handles.stereotax_fiducials.(stx_name){i}{1}; 
+        nm  = handles.stereotax_fiducials.(stx_name){i}{1};
         coords = handles.stereotax_fiducials.(stx_name){i}{2};
-        list{end+1} = [nm ': (' num2str(coords(1)) ',' num2str(coords(2)) ',' num2str(coords(3))]; 
-        handles.stereotax_fiducials.(stx_name){i}{3} = i; 
+        list{end+1} = [nm ': (' num2str(coords(1)) ',' num2str(coords(2)) ',' num2str(coords(3))];
+        handles.stereotax_fiducials.(stx_name){i}{3} = i;
     end
-
+    
     set(handles.stereotax_fiducials_list, 'String', list);
 end
 
@@ -918,36 +977,36 @@ function transform_fiducials_to_stereotax_Callback(hObject, eventdata, handles)
 % hObject    handle to transform_fiducials_to_stereotax (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-stx_nms = get(handles.stereotax_selector, 'String'); 
-stereotax_id = get(handles.stereotax_selector, 'Value'); 
+stx_nms = get(handles.stereotax_selector, 'String');
+stereotax_id = get(handles.stereotax_selector, 'Value');
 stx_name = stx_nms{stereotax_id};
 
-% Get fiducial points 
-nFids = length(handles.mri_fiducials); 
-mri_pts = []; 
+% Get fiducial points
+nFids = length(handles.mri_fiducials);
+mri_pts = [];
 
-for i = 1:nFids 
-    % This is a fiducial then; 
+for i = 1:nFids
+    % This is a fiducial then;
     if strfind(handles.mri_handles{i}{1}, 'f_') == 1
-        mri_pts = [mri_pts; handles.mri_handles{i}{2}]; 
+        mri_pts = [mri_pts; handles.mri_handles{i}{2}];
     end
 end
 
-stx_pts = []; 
+stx_pts = [];
 nFids = length(handles.stereotax_fiducials.(stx_name));
 for i = 1:nFids
     assert(handles.stereotax_fiducials.(stx_name){i}{1}(1:2) == 'f_')
-    stx_pts = [stx_pts handles.stereotax_fiducials.(stx_name){i}{2}]; 
+    stx_pts = [stx_pts handles.stereotax_fiducials.(stx_name){i}{2}];
 end
-        
+
 assert(size(mri_pts, 1) == size(stx_pts, 1))
 assert(size(mri_pts, 2) == size(stx_pts, 2) == 3)
 
-% Transform 
-fiducial_pts_1 = mri_pts'; % 3 x N 
-fiducial_pts_2 = stx_pts'; % 3 x N; 
+% Transform
+fiducial_pts_1 = mri_pts'; % 3 x N
+fiducial_pts_2 = stx_pts'; % 3 x N;
 
-handles.transform_matrix = TransformationMatrix(fiducial_pts_1, fiducial_pts_2); 
+handles.transform_matrix = TransformationMatrix(fiducial_pts_1, fiducial_pts_2);
 
 
 % --- Executes on selection change in listbox4.
@@ -973,19 +1032,19 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
 end
 
 
-% --- Executes on selection change in surface_list.
-function surface_list_Callback(hObject, eventdata, handles)
-% hObject    handle to surface_list (see GCBO)
+% --- Executes on selection change in surfaces_list.
+function surfaces_list_Callback(hObject, eventdata, handles)
+% hObject    handle to surfaces_list (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% Hints: contents = cellstr(get(hObject,'String')) returns surface_list contents as cell array
-%        contents{get(hObject,'Value')} returns selected item from surface_list
+% Hints: contents = cellstr(get(hObject,'String')) returns surfaces_list contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from surfaces_list
 
 
 % --- Executes during object creation, after setting all properties.
-function surface_list_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to surface_list (see GCBO)
+function surfaces_list_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to surfaces_list (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 
@@ -1001,13 +1060,75 @@ function load_surfaces_Callback(hObject, eventdata, handles)
 % hObject    handle to load_surfaces (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-[filename, path] = uigetfile('*.stl'); 
+[filename, path] = uigetfile('*.gii');
 
-% Use the filename to label this; 
+% Use the filename to label this;
 if ~isfield(handles, 'brain_surfaces')
-    handles.brain_surfaces = struct(); 
+    handles.brain_surfaces = {};
+    handles.brain_surfaces_handles = {};
 end
 
-% Plot the STL; 
+% Load the gifti mesh
+mesh = ft_read_headshape([path filename], 'format', 'gifti', 'coordsys', 'acpc', 'unit', 'mm');
 
-handles.brain_surfaces.(filename) 
+% Transform to ijk space
+ijk_mesh = ft_transform_geometry(inv(handles.mri.transform), mesh);
+
+% Also add to the list
+list = get(handles.surfaces_list, 'String');
+list{end+1} = filename;
+set(handles.surfaces_list, 'String', list);
+
+L = length(list);
+
+% Add to the list of brain surfaces
+handles.brain_surfaces{end+1} = {filename, ijk_mesh, L};
+handles.brain_surfaces_handles{end+1} = [];
+
+guidata(hObject, handles);
+
+
+% --- Executes on button press in minus_surface.
+function minus_surface_Callback(hObject, eventdata, handles)
+% hObject    handle to minus_surface (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+val = get(handles.surfaces_list, 'Value');
+
+% Remove this value;
+for i = 1:length(handles.brain_surfaces)
+    if handles.brain_surfaces{i}{3} == val
+        if i == length(handles.brain_surfaces)
+            handles.brain_surfaces = {handles.brain_surfaces{1:i-1}};
+            handles.brain_surfaces_handles = {handles.brain_surfaces_handles{1:i-1}};
+        elseif i == 1
+            handles.brain_surfaces = {handles.brain_surfaces{i+1:end}};
+            handles.brain_surfaces_handles = {handles.brain_surfaces_handles{i+1:end}};
+        else
+            handles.brain_surfaces = {handles.brain_surfaces{1:i-1}, handles.brain_surfaces{i+1:end}};
+            handles.brain_surfaces_handles = {handles.brain_surfaces_handles{1:i-1}, handles.brain_surfaces_handles{i+1:end}};
+        end
+        break
+    end
+end
+
+list = {};
+for i = 1:length(handles.brain_surfaces)
+    nm  = handles.brain_surfaces{i}{1};
+    list{i} = nm;
+    handles.brain_surfaces{i}{3} = i;
+end
+
+set(handles.surfaces_list, 'String', list);
+guidata(hObject, handles);
+
+% --- Executes on button press in toggle_surfaces.
+function toggle_surfaces_Callback(hObject, eventdata, handles)
+% hObject    handle to toggle_surfaces (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of toggle_surfaces
+val = get(handles.toggle_surfaces, 'Value');
+handles.surf_toggle = val;
+guidata(hObject, handles);
