@@ -22,7 +22,7 @@ function varargout = Fiducial_GUI(varargin)
 
 % Edit the above text to modify the response to help Fiducial_GUI
 
-% Last Modified by GUIDE v2.5 27-Apr-2022 19:06:15
+% Last Modified by GUIDE v2.5 01-May-2022 22:02:34
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -294,7 +294,7 @@ ft_plot_crosshair([size(handles.ana, 1) ijk(2) ijk(3)], 'handle', handles.handle
 ft_plot_crosshair([ijk(1) ijk(2) size(handles.ana,3)], 'handle', handles.handlescross(3, :));
 
 handles = plot_fiducials(handles);
-
+handles = plot_electrode_tracts(handles); 
 
 function handles = plot_fiducials(handles)
 % Update fiducial marker
@@ -614,6 +614,12 @@ for i = 1:length(handles.mri_fiducials)
     handles.mri_fiducials{i}{3} = i;
 end
 
+if length(list) >= 1
+    set(handles.mri_fiducials_list, 'Value', 1); 
+else
+    set(handles.mri_fiducials_list, 'Value', 0);
+end
+
 set(handles.mri_fiducials_list, 'String', list);
 handles = plot_fiducials(handles);
 guidata(hObject, handles);
@@ -649,6 +655,7 @@ function save_mri_fiducials_Callback(hObject, eventdata, handles)
 mri_filename = handles.mri_filename;
 fiducials_filename = [mri_filename(1:end-4) '_fiducials.mat'];
 mri_fiducials = handles.mri_fiducials;
+disp(['Saving mri fiducials ' fiducials_filename ]); 
 save(fiducials_filename, 'mri_fiducials');
 
 
@@ -817,7 +824,12 @@ val_in_list = length(get(handles.stereotax_fiducials_list, 'String'));
 
 coords = [ML, AP, DV];
 
-name = ['f_' num2str(val_in_list+1)];
+x = input('enter fiducial number: '); 
+if ~isempty(x)
+    name = ['f_' num2str(x)]; 
+else
+    name = ['f_' num2str(val_in_list+1)];
+end
 handles.stereotax_fiducials.(stx_name){end+1} = {name, coords, val_in_list+1};
 
 list = get(handles.stereotax_fiducials_list, 'String');
@@ -862,6 +874,12 @@ for i = 1:length(handles.stereotax_fiducials.(stx_name))
     coords = handles.stereotax_fiducials.(stx_name){i}{2};
     list{end+1} = [nm ': (' num2str(coords(1)) ',' num2str(coords(2)) ',' num2str(coords(3))];
     handles.stereotax_fiducials.(stx_name){i}{3} = i;
+end
+
+if length(list) >= 1
+    set(handles.stereotax_fiducials_list, 'Value', 1);
+else
+    set(handles.stereotax_fiducials_list, 'Value', 0);
 end
 
 set(handles.stereotax_fiducials_list, 'String', list);
@@ -947,7 +965,7 @@ for i = 1:length(nms)
 end
 
 if strcmp(stx_name, '')
-    MException('Fiducial_GUI:load_stereotax_fiducials_Callback',['we dont support this stereotax now ' stereotax_name]);
+    disp(['load_stereotax_fiducials_Callback: we dont support this stereotax now ' stereotax_name]);
 else
     
     if ~isfield(handles, 'stereotax_fiducials')
@@ -985,22 +1003,32 @@ stx_name = stx_nms{stereotax_id};
 nFids = length(handles.mri_fiducials);
 mri_pts = [];
 
+mri_tgs = [];
+mri_tgs_labels = {}; 
+
 for i = 1:nFids
     % This is a fiducial then;
-    if strfind(handles.mri_handles{i}{1}, 'f_') == 1
-        mri_pts = [mri_pts; handles.mri_handles{i}{2}];
+    if strfind(handles.mri_fiducials{i}{1}, 'f_') == 1
+        mri_pts = [mri_pts; handles.mri_fiducials{i}{2}];
+    else
+        tmp = strfind(handles.mri_fiducials{i}{1}, 't_');
+        if or(tmp == 1, tmp(1) == 1)
+            mri_tgs = [mri_tgs; handles.mri_fiducials{i}{2}]; % ML / AP / DV
+            mri_tgs_labels{end+1} = handles.mri_fiducials{i}{1}; 
+        end
     end
 end
 
 stx_pts = [];
 nFids = length(handles.stereotax_fiducials.(stx_name));
 for i = 1:nFids
-    assert(handles.stereotax_fiducials.(stx_name){i}{1}(1:2) == 'f_')
-    stx_pts = [stx_pts handles.stereotax_fiducials.(stx_name){i}{2}];
+    assert(strfind(handles.stereotax_fiducials.(stx_name){i}{1}(1:2), 'f_')==1)
+    stx_pts = [stx_pts; handles.stereotax_fiducials.(stx_name){i}{2}];
 end
 
 assert(size(mri_pts, 1) == size(stx_pts, 1))
-assert(size(mri_pts, 2) == size(stx_pts, 2) == 3)
+assert(size(mri_pts, 2) == size(stx_pts, 2))
+assert(size(mri_pts, 2) == 3)
 
 % Transform
 fiducial_pts_1 = mri_pts'; % 3 x N
@@ -1008,20 +1036,41 @@ fiducial_pts_2 = stx_pts'; % 3 x N;
 
 handles.transform_matrix = TransformationMatrix(fiducial_pts_1, fiducial_pts_2);
 
+% Now transform target points 
+% Add ones to the end to allow for offset 
+% N x 3 --> N x 4; 
+if ~isempty(mri_tgs)
+    mri_tgs = [mri_tgs ones(size(mri_tgs, 1), 1)]; 
 
-% --- Executes on selection change in listbox4.
-function listbox4_Callback(hObject, eventdata, handles)
-% hObject    handle to listbox4 (see GCBO)
+    % N x 4; 
+    trans_mri_tgs = (handles.transform_matrix*mri_tgs')'; 
+
+    % Add these to the 
+    list = {};
+    for i = 1:length(mri_tgs_labels)
+        list{i} = [mri_tgs_labels{i} ': ml ' num2str(trans_mri_tgs(i, 1))...
+                                     ', ap ' num2str(trans_mri_tgs(i, 2))...
+                                     ', dv ' num2str(trans_mri_tgs(i, 3))]; 
+    end
+
+    set(handles.transformed_t, 'String', list); 
+end
+guidata(hObject, handles);
+
+
+% --- Executes on selection change in transformed_t.
+function transformed_t_Callback(hObject, eventdata, handles)
+% hObject    handle to transformed_t (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% Hints: contents = cellstr(get(hObject,'String')) returns listbox4 contents as cell array
-%        contents{get(hObject,'Value')} returns selected item from listbox4
+% Hints: contents = cellstr(get(hObject,'String')) returns transformed_t contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from transformed_t
 
 
 % --- Executes during object creation, after setting all properties.
-function listbox4_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to listbox4 (see GCBO)
+function transformed_t_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to transformed_t (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 
@@ -1132,3 +1181,1080 @@ function toggle_surfaces_Callback(hObject, eventdata, handles)
 val = get(handles.toggle_surfaces, 'Value');
 handles.surf_toggle = val;
 guidata(hObject, handles);
+
+
+% --- Executes on selection change in angcalc_stx_selector.
+function angcalc_stx_selector_Callback(hObject, eventdata, handles)
+% hObject    handle to angcalc_stx_selector (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: contents = cellstr(get(hObject,'String')) returns angcalc_stx_selector contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from angcalc_stx_selector
+
+stxs = get(handles.angcalc_stx_selector, 'String'); 
+vl = get(handles.angcalc_stx_selector, 'Value'); 
+stx_name = stxs{vl}; 
+
+if ~isfield(handles.angle_calc_list1, stx_name)
+    handles.angle_calc_list1.(stx_name) = {}; 
+end
+
+if ~isfield(handles.angle_calc_list2, stx_name)
+    handles.angle_calc_list2.(stx_name) = {}; 
+end
+    
+list1 = {}; 
+list2 = {}; 
+for i = 1:size(handles.angle_calc_list1.(stx_name), 2)
+    
+    list1{i} = [num2str(handles.angle_calc_list1.(stx_name){i}(1)) ','...
+        num2str(handles.angle_calc_list1.(stx_name){i}(2)) ','...
+        num2str(handles.angle_calc_list1.(stx_name){i}(3))]; 
+    
+    set(handles.angle_1, 'String', num2str(handles.angle_calc_list1.(stx_name){i}(1)))
+end
+
+if size(handles.angle_calc_list1.(stx_name)) == 0
+    set(handles.angle_1, 'String', '0'); 
+end
+if size(handles.angle_calc_list2.(stx_name)) == 0
+    set(handles.angle_2, 'String', '0'); 
+end
+
+for i = 1:size(handles.angle_calc_list2.(stx_name), 2)
+
+    list2{i} = [num2str(handles.angle_calc_list2.(stx_name){i}(1)) ','...
+        num2str(handles.angle_calc_list2.(stx_name){i}(2)) ','...
+        num2str(handles.angle_calc_list2.(stx_name){i}(3))]; 
+    
+    set(handles.angle_2, 'String', num2str(handles.angle_calc_list2.(stx_name){i}(1)))
+end
+
+set(handles.angcalc_list1,'String', list1); 
+set(handles.angcalc_list2,'String', list2); 
+
+guidata(hObject, handles);
+
+    
+    
+    
+% --- Executes during object creation, after setting all properties.
+function angcalc_stx_selector_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to angcalc_stx_selector (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: popupmenu controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes on selection change in angcalc_list1.
+function angcalc_list1_Callback(hObject, eventdata, handles)
+% hObject    handle to angcalc_list1 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: contents = cellstr(get(hObject,'String')) returns angcalc_list1 contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from angcalc_list1
+
+
+% --- Executes during object creation, after setting all properties.
+function angcalc_list1_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to angcalc_list1 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: listbox controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes on selection change in angcalc_list2.
+function angcalc_list2_Callback(hObject, eventdata, handles)
+% hObject    handle to angcalc_list2 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: contents = cellstr(get(hObject,'String')) returns angcalc_list2 contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from angcalc_list2
+
+
+% --- Executes during object creation, after setting all properties.
+function angcalc_list2_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to angcalc_list2 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: listbox controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+function angle_1_Callback(hObject, eventdata, handles)
+% hObject    handle to angle_1 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of angle_1 as text
+%        str2double(get(hObject,'String')) returns contents of angle_1 as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function angle_1_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to angle_1 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+function angle_2_Callback(hObject, eventdata, handles)
+% hObject    handle to angle_2 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of angle_2 as text
+%        str2double(get(hObject,'String')) returns contents of angle_2 as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function angle_2_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to angle_2 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+function angcalc_ml_1_Callback(hObject, eventdata, handles)
+% hObject    handle to angcalc_ml_1 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of angcalc_ml_1 as text
+%        str2double(get(hObject,'String')) returns contents of angcalc_ml_1 as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function angcalc_ml_1_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to angcalc_ml_1 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+function angcalc_dv_1_Callback(hObject, eventdata, handles)
+% hObject    handle to angcalc_dv_1 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of angcalc_dv_1 as text
+%        str2double(get(hObject,'String')) returns contents of angcalc_dv_1 as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function angcalc_dv_1_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to angcalc_dv_1 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes on button press in angcalc_add1.
+function angcalc_add1_Callback(hObject, eventdata, handles)
+% hObject    handle to angcalc_add1 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+angle = str2double(get(handles.angle_1, 'String')); 
+ml = str2double(get(handles.angcalc_ml_1, 'String')); 
+dv = str2double(get(handles.angcalc_dv_1, 'String')); 
+
+stxs = get(handles.angcalc_stx_selector, 'String'); 
+vl = get(handles.angcalc_stx_selector, 'Value'); 
+stx_name = stxs{vl}; 
+
+if ~isfield(handles, 'angle_calc_list1')
+    handles.angle_calc_list1 = struct(); 
+    handles.angle_calc_list1.(stx_name) = {}; 
+elseif ~isfield(handles.angle_calc_list1, stx_name)
+    handles.angle_calc_list1.(stx_name) = {}; 
+end
+
+list = get(handles.angcalc_list1, 'String'); 
+L = length(list); 
+
+handles.angle_calc_list1.(stx_name){end+1} = [angle, ml, dv, L+1]; 
+list{end+1} = [num2str(angle) ',' num2str(ml) ',' num2str(dv)]; 
+if length(list) > 0
+    set(handles.angcalc_list1, 'Value', 1);
+end
+set(handles.angcalc_list1, 'String', list); 
+guidata(hObject, handles);
+
+
+
+% --- Executes on button press in angcalc_rm1.
+function angcalc_rm1_Callback(hObject, eventdata, handles)
+% hObject    handle to angcalc_rm1 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+val_rm = get(handles.angcalc_list1, 'Value'); 
+
+stxs = get(handles.angcalc_stx_selector, 'String'); 
+vl = get(handles.angcalc_stx_selector, 'Value'); 
+stx_name = stxs{vl}; 
+
+
+for i = 1:length(handles.angle_calc_list1.(stx_name))
+    if handles.angle_calc_list1.(stx_name){i}(4) == val_rm
+        if i == 1
+            handles.angle_calc_list1.(stx_name) = {handles.angle_calc_list1.(stx_name){i+1:end}}; 
+        elseif i== length(handles.angle_calc_list1.(stx_name))
+            handles.angle_calc_list1.(stx_name) = {handles.angle_calc_list1.(stx_name){1:i-1}}; 
+        else
+            handles.angle_calc_list1.(stx_name) = {handles.angle_calc_list1.(stx_name){1:i-1}, handles.angle_calc_list1.(stx_name){i+1:end}}; 
+        end
+        break
+    end
+end
+
+list = {};
+for i = 1:length(handles.angle_calc_list1.(stx_name))
+    coords = handles.angle_calc_list1.(stx_name){i}(1:3); 
+    list{end+1} = [num2str(coords(1)) ',' num2str(coords(2)) ',' num2str(coords(3))];
+    handles.angle_calc_list1.(stx_name){i}(4) = i;
+end
+
+if length(list) >= 1
+    set(handles.angcalc_list1, 'Value', 1); 
+else
+    set(handles.angcalc_list1, 'Value', 0);
+end
+
+set(handles.angcalc_list1, 'String', list);
+guidata(hObject, handles);
+
+function angcalc_ml_2_Callback(hObject, eventdata, handles)
+% hObject    handle to angcalc_ml_2 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of angcalc_ml_2 as text
+%        str2double(get(hObject,'String')) returns contents of angcalc_ml_2 as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function angcalc_ml_2_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to angcalc_ml_2 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+function angcalc_dv_2_Callback(hObject, eventdata, handles)
+% hObject    handle to angcalc_dv_2 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of angcalc_dv_2 as text
+%        str2double(get(hObject,'String')) returns contents of angcalc_dv_2 as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function angcalc_dv_2_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to angcalc_dv_2 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes on button press in angcalc_add2.
+function angcalc_add2_Callback(hObject, eventdata, handles)
+% hObject    handle to angcalc_add2 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+angle = str2double(get(handles.angle_2, 'String')); 
+ml = str2double(get(handles.angcalc_ml_2, 'String')); 
+dv = str2double(get(handles.angcalc_dv_2, 'String')); 
+
+stxs = get(handles.angcalc_stx_selector, 'String'); 
+vl = get(handles.angcalc_stx_selector, 'Value'); 
+stx_name = stxs{vl}; 
+
+if ~isfield(handles, 'angle_calc_list2')
+    handles.angle_calc_list2 = struct(); 
+    handles.angle_calc_list2.(stx_name) = {}; 
+elseif ~isfield(handles.angle_calc_list2, stx_name)
+    handles.angle_calc_list2.(stx_name) = {}; 
+end
+
+list = get(handles.angcalc_list2, 'String'); 
+L = length(list); 
+
+handles.angle_calc_list2.(stx_name){end+1} = [angle, ml, dv, L+1]; 
+list{end+1} = [num2str(angle) ',' num2str(ml) ',' num2str(dv)]; 
+if length(list) > 0
+    set(handles.angcalc_list2, 'Value', 1);
+end
+set(handles.angcalc_list2, 'String', list); 
+guidata(hObject, handles);
+
+% --- Executes on button press in angcalc_rm2.
+function angcalc_rm2_Callback(hObject, eventdata, handles)
+% hObject    handle to angcalc_rm2 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+val_rm = get(handles.angcalc_list2, 'Value'); 
+
+stxs = get(handles.angcalc_stx_selector, 'String'); 
+vl = get(handles.angcalc_stx_selector, 'Value'); 
+stx_name = stxs{vl}; 
+
+
+for i = 1:length(handles.angle_calc_list2.(stx_name))
+    if handles.angle_calc_list2.(stx_name){i}(4) == val_rm
+        if i == 1
+            handles.angle_calc_list2.(stx_name) = {handles.angle_calc_list2.(stx_name){i+1:end}}; 
+        elseif i== length(handles.angle_calc_list2.(stx_name))
+            handles.angle_calc_list2.(stx_name) = {handles.angle_calc_list2.(stx_name){1:i-1}}; 
+        else
+            handles.angle_calc_list2.(stx_name) = {handles.angle_calc_list2.(stx_name){1:i-1}, handles.angle_calc_list2.(stx_name){i+1:end}}; 
+        end
+        break
+    end
+end
+
+list = {};
+for i = 1:length(handles.angle_calc_list2.(stx_name))
+    coords = handles.angle_calc_list2.(stx_name){i}(1:3); 
+    list{end+1} = [num2str(coords(1)) ',' num2str(coords(2)) ',' num2str(coords(3))];
+    handles.angle_calc_list2.(stx_name){i}(4) = i;
+end
+
+if length(list) >= 1
+    set(handles.angcalc_list2, 'Value', 1); 
+else
+    set(handles.angcalc_list2, 'Value', 0);
+end
+
+set(handles.angcalc_list2, 'String', list);
+guidata(hObject, handles);
+
+% --- Executes on button press in angcalc_calc.
+function angcalc_calc_Callback(hObject, eventdata, handles)
+% hObject    handle to angcalc_calc (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+stxs = get(handles.angcalc_stx_selector, 'String'); 
+vl = get(handles.angcalc_stx_selector, 'Value'); 
+stx_name = stxs{vl};
+
+% Make sure same length of points and same angles 
+assert(length(handles.angle_calc_list1.(stx_name)) == length(handles.angle_calc_list2.(stx_name)))
+L = length(handles.angle_calc_list1.(stx_name));
+
+angle1 = handles.angle_calc_list1.(stx_name){1}(1);
+angle2 = handles.angle_calc_list2.(stx_name){1}(1);
+
+pt1 = [handles.angle_calc_list1.(stx_name){1}(2:3)];
+pt2 = [handles.angle_calc_list2.(stx_name){1}(2:3)];
+
+
+for i = 2:L
+    assert(handles.angle_calc_list1.(stx_name){i}(1) == angle1)
+    assert(handles.angle_calc_list2.(stx_name){i}(1) == angle2)
+    
+    % Pts x 2 
+    pt1 = [pt1; handles.angle_calc_list1.(stx_name){i}(2:3)];
+    pt2 = [pt2; handles.angle_calc_list2.(stx_name){i}(2:3)];
+
+end
+
+dAng = angle2 - angle1; % degrees; 
+dRad = dAng / 180 * pi; % radians 
+
+% Transforms 
+rotMx = [cos(dRad) -sin(dRad); 
+         sin(dRad)  cos(dRad)]; 
+     
+% pt' = (R*(pt - d)) + d
+% pt' - d = R*pt - R*d
+% pt' - R*pt = -R*d + d
+% pt' - R*pt = (I - R)*d
+% (I -  R)^-1 (pt' - R*pt) = d; 
+
+IRinv = inv(eye(2) - rotMx); % 2 x 2 
+dest = IRinv* (pt2' - (rotMx*pt1')); % 2 x T 
+
+dmean = mean(dest, 2); 
+dstd = std(dest, [], 2); 
+
+if ~isfield(handles, 'angle_calc_d')
+    handles.angle_calc_d = struct(); 
+end
+
+if ~isfield(handles.angle_calc_d, stx_name)
+    handles.angle_calc_d.(stx_name) = struct(); 
+end
+
+dataset_nm = ['A_' num2str(angle1) '_' num2str(angle2)];
+display_str = ['mn: ' num2str(dmean(1)) ' ( ' num2str(dstd(1)) '), ' num2str(dmean(2)) ' ( ' num2str(dstd(2)) ')']; 
+handles.angle_calc_d.(stx_name).(dataset_nm) = {pt1, pt2, dest, dmean, dstd, display_str}; 
+set(handles.angcalc_offset_est, 'String', display_str)
+
+guidata(hObject, handles);
+
+% --- Executes on button press in angcalc_save.
+function angcalc_save_Callback(hObject, eventdata, handles)
+% hObject    handle to angcalc_save (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+stxs = get(handles.angcalc_stx_selector, 'String'); 
+vl = get(handles.angcalc_stx_selector, 'Value'); 
+stx_name = stxs{vl};
+
+angle1 = handles.angle_calc_list1.(stx_name){1}(1);
+angle2 = handles.angle_calc_list2.(stx_name){1}(1);
+dataset_nm = ['A_' num2str(angle1) '_' num2str(angle2)];
+
+pt1 = handles.angle_calc_d.(stx_name).(dataset_nm){1}; 
+pt2 = handles.angle_calc_d.(stx_name).(dataset_nm){2}; 
+dest = handles.angle_calc_d.(stx_name).(dataset_nm){3}; 
+dmean = handles.angle_calc_d.(stx_name).(dataset_nm){4}; 
+dstd = handles.angle_calc_d.(stx_name).(dataset_nm){5}; 
+display_str = handles.angle_calc_d.(stx_name).(dataset_nm){6}; 
+
+mri_filename = handles.mri_filename;
+dmean_filename = [mri_filename(1:end-4) '_' stx_name '_' dataset_nm '.mat'];
+disp(['saving offset info: ' dmean_filename]); 
+save(dmean_filename, 'pt1', 'pt2', 'dest', 'dmean', 'dstd', 'display_str',...
+'stx_name', 'dataset_nm', 'angle1', 'angle2');
+
+guidata(hObject, handles);
+
+% --- Executes on button press in angcalc_load.
+function angcalc_load_Callback(hObject, eventdata, handles)
+% hObject    handle to angcalc_load (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+[filename, path] = uigetfile('*.mat');
+
+data = load([path filename]); 
+
+dt = {data.pt1, data.pt2, data.dest, data.dmean, data.dstd, data.display_str}; 
+
+if ~isfield(handles, 'angle_calc_d')
+    handles.angle_calc_d = struct(); 
+end
+stx_name = data.stx_name; 
+if ~isfield(handles.angle_calc_d, stx_name)
+    handles.angle_calc_d.(stx_name) = struct(); 
+end
+
+stx_opts = get(handles.angcalc_stx_selector, 'String'); 
+for s= 1:length(stx_opts)
+    if strmatch(stx_opts{s}, stx_name)
+        set(handles.angcalc_stx_selector, 'Value', s);
+    end
+end
+
+handles.angle_calc_d.(data.stx_name).(data.dataset_nm) = dt; 
+
+% Display 
+set(handles.angcalc_offset_est, 'String', data.display_str); 
+
+% Render lists
+handles.angle_calc_list1.(stx_name) = {}; 
+handles.angle_calc_list2.(stx_name) = {}; 
+list1 = {}; 
+list2 = {}; 
+for i = 1:size(data.pt1, 1)
+    
+    % Add to 
+    handles.angle_calc_list1.(stx_name){i} = [data.angle1, data.pt1(i, 1), data.pt1(i, 2), i]; 
+    handles.angle_calc_list2.(stx_name){i} = [data.angle2, data.pt2(i, 1), data.pt2(i, 2), i]; 
+    
+    list1{i} = [num2str(data.angle1) ',' num2str(data.pt1(i, 1)) ',' num2str(data.pt1(i, 2))]; 
+    list2{i} = [num2str(data.angle2) ',' num2str(data.pt2(i, 1)) ',' num2str(data.pt2(i, 2))]; 
+
+end
+set(handles.angcalc_list1,'String', list1); 
+set(handles.angcalc_list2,'String', list2); 
+
+set(handles.angle_1, 'String', num2str(data.angle1))
+set(handles.angle_2, 'String', num2str(data.angle2))
+
+guidata(hObject, handles);
+
+
+
+function calc_ML_Callback(hObject, eventdata, handles)
+% hObject    handle to calc_ML (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of calc_ML as text
+%        str2double(get(hObject,'String')) returns contents of calc_ML as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function calc_ML_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to calc_ML (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+function calc_DV_Callback(hObject, eventdata, handles)
+% hObject    handle to calc_DV (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of calc_DV as text
+%        str2double(get(hObject,'String')) returns contents of calc_DV as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function calc_DV_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to calc_DV (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+function calc_ang1_Callback(hObject, eventdata, handles)
+% hObject    handle to calc_ang1 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of calc_ang1 as text
+%        str2double(get(hObject,'String')) returns contents of calc_ang1 as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function calc_ang1_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to calc_ang1 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+function calc_ang2_Callback(hObject, eventdata, handles)
+% hObject    handle to calc_ang2 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of calc_ang2 as text
+%        str2double(get(hObject,'String')) returns contents of calc_ang2 as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function calc_ang2_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to calc_ang2 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes on button press in convert_angle.
+function convert_angle_Callback(hObject, eventdata, handles)
+% hObject    handle to convert_angle (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Get stereotax; 
+stx_nms = get(handles.stereotax_selector, 'String');
+stereotax_id = get(handles.stereotax_selector, 'Value');
+stx_name = stx_nms{stereotax_id};
+
+% Get data from the most recent data; 
+angle1 = handles.angle_calc_list1.(stx_name){1}(1);
+angle2 = handles.angle_calc_list2.(stx_name){1}(1);
+dataset_nm = ['A_' num2str(angle1) '_' num2str(angle2)];
+disp(['Using dataset ' dataset_nm ', if you want to use another dataset, load it directly']); 
+
+% dmean; 
+dmean = handles.angle_calc_d.(stx_name).(dataset_nm){4}; 
+dstd = handles.angle_calc_d.(stx_name).(dataset_nm){5}; 
+
+dAngle = str2double(get(handles.calc_ang2, 'String')) - str2double(get(handles.calc_ang1, 'String'));
+dRad = dAngle / 180 * pi; 
+
+% 2 x 1 vector
+pt1 = [str2double(get(handles.calc_ML, 'String'));  str2double(get(handles.calc_DV, 'String'))];
+pt1_mx = pt1;
+pt1_mx(1) = pt1_mx(1) + dstd(1); 
+pt1_mx(2) = pt1_mx(2) + dstd(2); 
+
+pt1_mn = pt1;
+pt1_mn(1) = pt1_mn(1) - dstd(1); 
+pt1_mn(2) = pt1_mn(2) - dstd(2); 
+
+
+pt1_demean = pt1 - dmean; 
+pt1_mx_d = pt1_mx - dmean; 
+pt1_mn_d = pt1_mn - dmean; 
+
+% Transforms 
+rotMx = [cos(dRad) -sin(dRad); 
+         sin(dRad)  cos(dRad)]; 
+     
+pt2_demean = rotMx*pt1_demean; 
+pt2_mx_demean = rotMx*pt1_mx_d; 
+pt2_mn_demean = rotMx*pt1_mn_d; 
+
+assert(size(pt2_demean, 1) == 2)
+assert(size(pt2_demean, 2) == 1)
+
+% Add back the mean 
+pt2 = pt2_demean + dmean; 
+dpt2 = abs(pt2_mx_demean - pt2_mn_demean);
+
+str = ['ML: ' num2str(pt2(1)) ' ( ' num2str(dpt2(1)) '), DV: ' num2str(pt2(2)) ' ( ' num2str(dpt2(2)) ')']; 
+set(handles.estimated_ml_dv, 'String', str); 
+guidata(hObject, handles);
+
+
+% --- Executes on button press in calc_TRE.
+function calc_TRE_Callback(hObject, eventdata, handles)
+% hObject    handle to calc_TRE (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+stx_nms = get(handles.stereotax_selector, 'String');
+stereotax_id = get(handles.stereotax_selector, 'Value');
+stx_name = stx_nms{stereotax_id};
+
+% Get fiducial points
+nFids = length(handles.mri_fiducials);
+mri_pts = [];
+mri_tgs = [];
+mri_tgs_labels = {}; 
+
+for i = 1:nFids
+    % This is a fiducial then;
+    if strfind(handles.mri_fiducials{i}{1}, 'f_') == 1
+        mri_pts = [mri_pts; handles.mri_fiducials{i}{2}];
+    elseif strfind(handles.mri_fiducials{i}{1}, 't_') == 1
+        mri_tgs = [mri_tgs; handles.mri_fiducials{i}{2}]; % ML / AP / DV
+        mri_tgs_labels{end+1} = handles.mri_fiducials{i}{1}; 
+    end
+end
+
+stx_pts = [];
+nFids = length(handles.stereotax_fiducials.(stx_name));
+for i = 1:nFids
+    assert(strfind(handles.stereotax_fiducials.(stx_name){i}{1}(1:2), 'f_')==1)
+    stx_pts = [stx_pts; handles.stereotax_fiducials.(stx_name){i}{2}];
+end
+
+% Get out error and axes
+[r_ax, a_ax, s_ax, err] = compute_TRE(handles, mri_pts, stx_pts); 
+[Nr, Na, Ns] = size(err); 
+
+% For each target figure out error % 
+for t=1:size(mri_tgs, 1)
+    
+    % target 
+    tg = mri_tgs(t, :); 
+    
+    % find closest error; 
+    [~, ix_r] = min(abs(r_ax-tg(1)));
+    [~, ix_a] = min(abs(a_ax-tg(2)));
+    [~, ix_s] = min(abs(s_ax-tg(3)));
+    
+    disp([ mri_tgs_labels{t} ' est. error: ' num2str(err(ix_r, ix_a, ix_s))]);
+end
+
+% Save if we want to save for later % 
+handles.TRE = {r_ax, a_ax, s_ax, err};
+
+% Plot figure with TRE
+figure; 
+AX = {r_ax, a_ax, s_ax};
+clim = [prctile(err, 10, 'all'), prctile(err, 90, 'all')]; 
+subplot(131); 
+imagesc(AX{1}, AX{2}, err(:, :, round(Ns/2)), clim); 
+xlabel('L <--> R')
+ylabel('A <--> P'); 
+title('Axial')
+
+subplot(132); 
+imagesc(AX{2}, AX{3}, squeeze(err(round(Nr/2), :, :)), clim); 
+xlabel('P <--> A'); 
+ylabel('S <--> I')
+title('Sag.')
+
+subplot(133); 
+imagesc(AX{1}, AX{3}, squeeze(err(:, round(Na/2), :)), clim); 
+xlabel('L <--> R')
+ylabel('S <--> I')
+title('Coronal')
+
+colorbar()
+
+assert(size(mri_pts, 1) == size(stx_pts, 1))
+assert(size(mri_pts, 2) == size(stx_pts, 2))
+assert(size(mri_pts, 2) == 3)
+
+
+guidata(hObject, handles);
+
+
+function [r_ax, a_ax, s_ax, err] = compute_TRE(handles, fids, stx_fids)
+    N = size(fids, 1); 
+    fids = [fids, ones(N, 1)]; 
+    T = handles.transform_matrix; 
+    
+    % Transform true fiducials 
+    trans_fids = (T*fids')'; 
+    
+    % Fiducial registration error (FRE) 
+    FRE2 = mean(sqrt(sum(((trans_fids(:, 1:3) - stx_fids).^2), 2))); 
+    disp(['Mean FRE2 = ' num2str(FRE2)])
+    
+    mn_true = mean(fids, 1); 
+    fids_demean = fids - repmat(mn_true, [N, 1]); 
+    
+    % Get principle axis of demeaned x/y/z 
+    [~, ~, v] = svd(fids_demean(:, 1:3)); 
+    
+    r_ax = linspace(min(fids(:, 1))-10, max(fids(:, 1))+10, 60); 
+    a_ax = linspace(min(fids(:, 2))-10, max(fids(:, 2))+10, 50); 
+    s_ax = linspace(min(fids(:, 3))-10, max(fids(:, 3))+10, 45); 
+    
+    err = zeros(length(r_ax), length(a_ax), length(s_ax)); 
+    
+    for ir=1:length(r_ax)
+        r = r_ax(ir);
+        for ia=1:length(a_ax)
+            a = a_ax(ia); 
+            for is=1:length(s_ax)
+                s = s_ax(is); 
+                err(ir, ia, is) = get_TRE([r, a, s], fids(:, 1:3), mn_true(1:3), FRE2, v, N);
+            end
+        end
+    end
+
+
+function tre = get_TRE(target, fids, fid_centroid, FRE2, v, N)
+    t_pa = (v'*((target - fid_centroid)'))'; 
+    f_pa = (v'*(fids - repmat(fid_centroid, [N, 1]))')'; 
+    
+    rat = 0;
+    for i = 1:3
+        dk2 = t_pa(i).^2; 
+        fk2 = mean(f_pa(:, i).^2); 
+        rat = rat + (dk2/fk2); 
+    end
+    
+    tre = (FRE2) / (N-2) * (1 + (1/3)*rat); 
+
+
+% --- Executes on button press in save_everything.
+function save_everything_Callback(hObject, eventdata, handles)
+% hObject    handle to save_everything (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Basically save handles; 
+mri_filename = handles.mri_filename;
+
+% Add datetimestamp 
+dttim = datestr(now,'HH:MM:SS.FFF'); 
+
+% Get ext for notes 
+ext = get(handles.save_all_ext, 'String'); 
+filename = [mri_filename(1:end-4) '_' dttim '_' ext '.mat'];
+save(filename, 'handles');
+
+function save_all_ext_Callback(hObject, eventdata, handles)
+% hObject    handle to save_all_ext (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of save_all_ext as text
+%        str2double(get(hObject,'String')) returns contents of save_all_ext as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function save_all_ext_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to save_all_ext (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes on button press in plot_angled_approach.
+function plot_angled_approach_Callback(hObject, eventdata, handles)
+% hObject    handle to plot_angled_approach (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+mri_tgs = [];
+mri_pts = []; 
+mri_tgs_labels = {}; 
+
+nFids = length(handles.mri_fiducials);
+
+for i = 1:nFids
+    % This is a fiducial then;
+    if strfind(handles.mri_fiducials{i}{1}, 'f_') == 1
+        mri_pts = [mri_pts; handles.mri_fiducials{i}{2}];
+    else
+        tmp = strfind(handles.mri_fiducials{i}{1}, 't_');
+        if or(tmp==1, tmp(1) == 1)
+            mri_tgs = [mri_tgs; handles.mri_fiducials{i}{2}]; % ML / AP / DV
+            mri_tgs_labels{end+1} = handles.mri_fiducials{i}{1}; 
+        end
+    end
+end
+
+% Which one is highlighted ? % 
+val = get(handles.transformed_t, 'Value'); 
+mri_target = [mri_tgs(val, :), 1]; 
+stx_target = (handles.transform_matrix*mri_target')'; 
+disp(['Plotting target: ' mri_tgs_labels{val}]); 
+
+% Now presumably these stereotaxic coordinates are in R.A.S coordinates too
+angle = str2double(get(handles.angled_approach, 'String')); 
+
+% Now in stereotaxic coordinates, focus on coronal plane; 
+% Go 40 mm distance 
+rad = angle / 180 * pi; 
+ML_end = 40*sin(rad) + stx_target(1); 
+SI_end = 40*cos(rad) + stx_target(3); 
+stx_target_end = [ML_end, stx_target(2), SI_end, 1]; 
+
+% Now transform this back to MRI coordinates
+inv_trans = inv(handles.transform_matrix); 
+
+mri_target_st = (inv_trans*stx_target')'; 
+mri_target_end = (inv_trans*stx_target_end')'; 
+
+if ~isfield(handles, 'electrode_tracts')
+    handles.electrode_tracts = {}; 
+end
+
+handles.electrode_tracts{end+1} = {mri_tgs_labels{val}, mri_target_st, mri_target_end, angle}; 
+
+list = {}; 
+for i=1:length(handles.electrode_tracts)
+    list{end+1}=['Ang ' num2str(handles.electrode_tracts{i}{4}) ', ' handles.electrode_tracts{i}{1}];  
+end
+set(handles.electrode_list, 'String', list)
+
+% Plot a line from MRI target_st to MRI_target_end; 
+handles = plot_electrode_tracts(handles);
+guidata(hObject, handles);
+
+function handles = plot_electrode_tracts(handles)
+
+if isfield(handles, 'electrode_tract_handles')
+    delete(handles.electrode_tract_handles)
+end
+
+if isfield(handles, 'electrode_tracts')
+    elec_list = handles.electrode_tracts;
+    
+    if length(elec_list) > 0
+        if length(elec_list) == 1
+            colors = [0, 1, 1]; 
+        else
+            colors = jet(2*length(elec_list));
+            % Only use the warmer colors for better viewing;
+            colors = colors(length(elec_list):end, :);
+        end
+        handles.electrode_tract_handles = [];
+
+        % MM to pixels % 
+        inv_trans = inv(handles.mri.transform);
+        
+        for i = 1:length(elec_list)
+            
+            pos1 = [elec_list{i}{2}];
+            pos2 = [elec_list{i}{3}];
+            
+            pos_inter = [linspace(pos1(1), pos2(1), 40)',...
+                         linspace(pos1(2), pos2(2), 40)',...
+                         linspace(pos1(3), pos2(3), 40)',...
+                         ones(40, 1)]; 
+            
+            % N x 3 points; 
+            
+            % Go from xyz to ijk;
+            ijk_inter = (inv_trans * pos_inter')';
+            ijk_inter = round(ijk_inter);
+           
+            ix_near2 = find(abs(pos_inter(:, 2) - handles.xyz(2)) < .3); 
+            if ~isempty(ix_near2) > 0
+                set(gcf, 'currentaxes', handles.coronal_ax);
+                hold on;
+                h1 = line(ijk_inter(ix_near2, 1), ones(length(ix_near2)),...
+                    ijk_inter(ix_near2, 3), 'color', colors(i, :));
+                try
+                    handles.electrode_tract_handles = [handles.electrode_tract_handles h1];
+                catch
+                    handles.electrode_tract_handles = [handles.electrode_tract_handles; h1];
+                end
+                hold off;
+            end
+            
+            ix_near3 = find(abs(pos_inter(:, 3) - handles.xyz(3))<.3); 
+            if ~isempty(ix_near3)
+                set(gcf, 'currentaxes', handles.ax_ax);
+                hold on;
+                h2 = line(ijk_inter(ix_near3, 1), ijk_inter(ix_near3, 2),...
+                    zeros(length(ix_near3), 1) + size(handles.ana,3), 'color', colors(i, :));
+                try
+                    handles.electrode_tract_handles = [handles.electrode_tract_handles h2];
+                catch
+                    handles.electrode_tract_handles = [handles.electrode_tract_handles; h2];
+                end
+                hold off;
+            end
+            
+            ix_near1 = find(abs(pos_inter(:, 1) - handles.xyz(1)) < .3); 
+            if ~isempty(ix_near1)
+                set(gcf, 'currentaxes', handles.sag_ax);
+                hold on;
+                h3 = line(zeros(length(ix_near1), 1) + size(handles.ana, 1),...
+                    ijk_inter(ix_near1, 2),ijk_inter(ix_near1, 3), 'color', colors(i, :));
+                try
+                    handles.electrode_tract_handles = [handles.electrode_tract_handles h3];
+                catch
+                    handles.electrode_tract_handles = [handles.electrode_tract_handles; h3];
+                end
+                hold off;
+            end
+        end
+    end
+end
+
+
+function angled_approach_Callback(hObject, eventdata, handles)
+% hObject    handle to angled_approach (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of angled_approach as text
+%        str2double(get(hObject,'String')) returns contents of angled_approach as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function angled_approach_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to angled_approach (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes on selection change in electrode_list.
+function electrode_list_Callback(hObject, eventdata, handles)
+% hObject    handle to electrode_list (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: contents = cellstr(get(hObject,'String')) returns electrode_list contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from electrode_list
+
+
+% --- Executes during object creation, after setting all properties.
+function electrode_list_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to electrode_list (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: listbox controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes on button press in clear_electrodes.
+function clear_electrodes_Callback(hObject, eventdata, handles)
+% hObject    handle to clear_electrodes (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+set(handles.electrode_list, 'String', {}); 
+handles.electrode_tracts = {}; 
+delete(handles.electrode_tract_handles); 
+% Update handles structure
+guidata(hObject, handles); 
