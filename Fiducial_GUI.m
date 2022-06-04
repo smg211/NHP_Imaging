@@ -22,7 +22,7 @@ function varargout = Fiducial_GUI(varargin)
 
 % Edit the above text to modify the response to help Fiducial_GUI
 
-% Last Modified by GUIDE v2.5 04-Jun-2022 12:23:09
+% Last Modified by GUIDE v2.5 04-Jun-2022 13:55:46
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -59,7 +59,7 @@ handles.output = hObject;
 guidata(hObject, handles);
 
 % UIWAIT makes Fiducial_GUI wait for user response (see UIRESUME)
-% uiwait(handles.figure1);
+% uiwait(handles.fiducial_gui);
 
 
 % --- Outputs from this function are returned to the command line.
@@ -1993,9 +1993,11 @@ s.LineStyle = 'none';
 set(gca, 'clim', clim);
 hold all; 
 plot(mri_pts(:, 1), mri_pts(:, 2), 'w.'); 
+text(mri_pts(:, 1), mri_pts(:, 2), mri_pts_labels(handles.mri_pts_indices),...
+    'Color','w')
 xlabel('L <--> R')
 ylabel('P <--> A'); 
-title('Axial')
+title('Axial -- mri')
 
 subplot(132); 
 s=pcolor(AX{2}, AX{3}, squeeze(err(round(Nr/2), :, :))');
@@ -2003,9 +2005,11 @@ s.LineStyle = 'none';
 set(gca, 'clim', clim); 
 hold all;
 plot(mri_pts(:, 2), mri_pts(:, 3), 'w.'); 
+text(mri_pts(:, 2), mri_pts(:, 3), mri_pts_labels(handles.mri_pts_indices),...
+    'Color','w')
 xlabel('P <--> A'); 
 ylabel('I <--> S')
-title('Sag.')
+title('Sag. -- mri')
 
 subplot(133); 
 s=pcolor(AX{1}, AX{3}, squeeze(err(:, round(Na/2), :))');
@@ -2013,11 +2017,14 @@ s.LineStyle = 'none';
 set(gca, 'clim', clim);
 hold all;
 plot(mri_pts(:, 1), mri_pts(:, 3), 'w.');
+text(mri_pts(:, 1), mri_pts(:, 3), mri_pts_labels(handles.mri_pts_indices),...
+    'Color','w')
 xlabel('L <--> R')
 ylabel('I <--> S')
-title('Coronal')
+title('Coronal -- mri')
 
-colorbar()
+a=colorbar();
+a.Label.String = 'Error in mm';
 
 assert(size(mri_pts, 1) == size(stx_pts, 1))
 assert(size(mri_pts, 2) == size(stx_pts, 2))
@@ -2050,8 +2057,8 @@ for p = 1:3
     end
     
     for i = 1:N
-        plot(trans_mri_fids(i, ax1), trans_mri_fids(i, ax2), 'k.')
-        plot(stx_fids(i, ax1), stx_fids(i, ax2), 'r.')
+        plot(trans_mri_fids(i, ax1), trans_mri_fids(i, ax2), 'k.', 'Markersize', 30)
+        plot(stx_fids(i, ax1), stx_fids(i, ax2), 'r.', 'Markersize', 30)
         plot([trans_mri_fids(i, ax1), stx_fids(i, ax1)], [trans_mri_fids(i, ax2),...
             stx_fids(i, ax2)], 'k-')
         text(stx_fids(i, ax1), stx_fids(i, ax2),mri_pts_labels{handles.mri_pts_indices(i)}); 
@@ -2504,7 +2511,7 @@ dat2 = dat.(stx2);
 
 offset = []; 
 
-for dim = 1:2
+for dim = 1:3
     tmp = []; 
     for pts = 1:3
         if and(~isempty(dat1{pts}), ~isempty(dat2{pts}))
@@ -2519,17 +2526,7 @@ for dim = 1:2
     dtmp = tmp(:, 2) - tmp(:, 1); 
     assert(all( abs(tmp(:, 1) + dtmp - tmp(:, 2)) < 10^-10))
     disp(['Dim ' num2str(dim) ])
-    
-%     if dim == 2
-%         disp('If MMA_left pt 3, dim 2 was ')
-%         disp(tmp(end, 2) - mean(dtmp(1:(end-1))))
-%         disp('it might be fine!')
-%         disp('and offsets would be')
-%         dtmp2 = dtmp; 
-%         dtmp2(end) = tmp(end, 2) - (tmp(end, 2) - mean(dtmp(1:end-1))); 
-%         disp(dtmp2); 
-%         disp('but instead its this'); 
-%     end
+ 
     disp(dtmp); 
     offset = [offset mean(dtmp)]; 
 end
@@ -2538,14 +2535,29 @@ end
 if isfield(handles, 'mri_tgs_labels')
     mri_tgs_labels = handles.mri_tgs_labels; 
     % Add these to the 
+    
+    data_table = {}; 
     list = {};
     for i = 1:length(mri_tgs_labels)
         list{i} = [mri_tgs_labels{i} ': ml ' num2str(handles.trans_mri_tgs(i, 1) + offset(1))...
-                                     ', ap ' num2str(handles.trans_mri_tgs(i, 2) + offset(2))]; 
+                                     ', ap ' num2str(handles.trans_mri_tgs(i, 2) + offset(2))...
+                                     ', dv ' num2str(handles.trans_mri_tgs(i, 3) + offset(3))]; 
+                                 
+        % Data table for data GUI
+        data_table{i} = {mri_tgs_labels{i}, ...
+            handles.trans_mri_tgs(i, 1) + offset(1), ...
+            handles.trans_mri_tgs(i, 2) + offset(2), ...
+            handles.trans_mri_tgs(i, 3) + offset(3)}; 
+        
+        handles.data_table = data_table;
+        handles.data_table_stx = stx2; 
+        
     end
     
     set(handles.stx_stx_transform, 'String', list); 
+    
 end
+
 guidata(hObject, handles);
 
 
@@ -2641,5 +2653,7 @@ function open_data_entry_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Export the current predictions to new GUI to plot and save cortical errors
-x=10; 
-
+% Run the new Data entry GUI 
+% Use this approach to access data from original GUI: 
+% https://www.mathworks.com/matlabcentral/answers/146215-pass-data-between-gui-s
+Data_Entry_GUI
