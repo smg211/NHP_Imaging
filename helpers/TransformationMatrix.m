@@ -1,6 +1,6 @@
 function T = TransformationMatrix(Pf1,Pf2)
 % T = TransformationMatrix(Pf1,Pf2)
-% Karen Schroeder for Chestek Lab
+% Karen Schroeder for Chestek Lab (thanks Karen!) 
 % method from Accuracy in Stereotactic and Image Guidance by Hartov & Roberts
  
 % We start with N points (MRI)
@@ -31,6 +31,9 @@ H = Qf1 * Qf2.';
  
 % Then [U S V] = svd(H)
 [U, S, V] = svd(H);
+
+% U*S*V' = H
+% (U*V')' = V*U'
  
 % rotation matrix R: R = V x U.'
 R = V * U.';

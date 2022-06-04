@@ -22,7 +22,7 @@ function varargout = Fiducial_GUI(varargin)
 
 % Edit the above text to modify the response to help Fiducial_GUI
 
-% Last Modified by GUIDE v2.5 04-Jun-2022 12:23:09
+% Last Modified by GUIDE v2.5 13-May-2022 10:36:27
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -78,8 +78,6 @@ function load_MRI_Callback(hObject, eventdata, handles)
 % hObject    handle to load_MRI (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-addpath(genpath('/Users/preeyakhanna/NHP_imaging')); 
-
 [filename, path] = uigetfile('*.nii');
 
 % display the filename
@@ -917,21 +915,6 @@ for i = 1:length(handles.stereotax_fiducials.(stx_name))
 end
 
 set(handles.stereotax_fiducials_list, 'String', list);
-
-% Set stx selector 2
-val = get(handles.stereotax_selector, 'Value'); 
-contents = get(handles.stereotax_selector, 'String'); 
-stx = contents{val}; 
-
-contents2 = get(handles.stereotax_selector, 'String'); 
-for i = 1:length(contents2)
-    if strmatch(contents2{i}, stx)
-        set(handles.stereotax_selector2, 'Value', i); 
-    end
-end
-
-
-
 guidata(hObject, handles);
 
 % --- Executes during object creation, after setting all properties.
@@ -1091,10 +1074,7 @@ if ~isempty(mri_tgs)
                                      ', ap ' num2str(trans_mri_tgs(i, 2))...
                                      ', dv ' num2str(trans_mri_tgs(i, 3))]; 
     end
-    
-    handles.mri_tgs_labels = mri_tgs_labels; 
-    handles.trans_mri_tgs = trans_mri_tgs; 
-    
+
     set(handles.transformed_t, 'String', list); 
 end
 guidata(hObject, handles);
@@ -1935,7 +1915,6 @@ stx_name = stx_nms{stereotax_id};
 % Get fiducial points
 nFids = length(handles.mri_fiducials);
 mri_pts = [];
-mri_pts_labels = {}; 
 mri_tgs = [];
 mri_tgs_labels = {}; 
 
@@ -1943,7 +1922,6 @@ for i = 1:nFids
     % This is a fiducial then;
     if strfind(handles.mri_fiducials{i}{1}, 'f_') == 1
         mri_pts = [mri_pts; handles.mri_fiducials{i}{2}];
-        mri_pts_labels{end+1} = handles.mri_fiducials{i}{1}; 
     elseif strfind(handles.mri_fiducials{i}{1}, 't_') == 1
         mri_tgs = [mri_tgs; handles.mri_fiducials{i}{2}]; % ML / AP / DV
         mri_tgs_labels{end+1} = handles.mri_fiducials{i}{1}; 
@@ -2024,78 +2002,25 @@ assert(size(mri_pts, 2) == size(stx_pts, 2))
 assert(size(mri_pts, 2) == 3)
 
 
-% Plot fiducial errors in 2D planar space % 
-trans_mri_fids = trans_fids_fcn(handles, mri_pts); 
-stx_fids = stx_pts; 
-N = length(mri_pts_labels(handles.mri_pts_indices)); 
-
-figure; 
-labels = {'L<--> R', 'P <--> A', 'I <--> S'}; 
-titles = {'Axial--stx', 'Sag--stx', 'Coronal--stx'}; 
-
-for p = 1:3
-    subplot(1,4,p); hold all; 
-    ax1 = p; 
-    if p+1 > 3
-        ax2 = p+1 - 3; 
-    else
-        ax2 = p+1; 
-    end
-    
-    if ax2 < ax1
-        ax1_ = ax2; 
-        ax2_ = ax1; 
-        ax1 = ax1_; 
-        ax2 = ax2_; 
-    end
-    
-    for i = 1:N
-        plot(trans_mri_fids(i, ax1), trans_mri_fids(i, ax2), 'k.')
-        plot(stx_fids(i, ax1), stx_fids(i, ax2), 'r.')
-        plot([trans_mri_fids(i, ax1), stx_fids(i, ax1)], [trans_mri_fids(i, ax2),...
-            stx_fids(i, ax2)], 'k-')
-        text(stx_fids(i, ax1), stx_fids(i, ax2),mri_pts_labels{handles.mri_pts_indices(i)}); 
-    end
-    
-    xlabel(labels{ax1})
-    ylabel(labels{ax2})
-    title(titles{p})
-end
-    
-% Subplot 4 -- errors; 
-subplot(1, 4, 4); hold all; 
-title('Err (mm): Meas - Pred');
-err = stx_fids - trans_mri_fids(:, 1:3); 
-for p = 1:3
-    bar(p, mean(err(:, p)))
-    plot(zeros(1, N)+p, err(:, p), 'k.'); 
-end
-xticks([1, 2,3])
-xticklabels({'ML', 'AP', 'DV'})
+% Plot fiducials; 
 
 
 guidata(hObject, handles);
 
-function trans_fids = trans_fids_fcn(handles, fids)
+
+function [r_ax, a_ax, s_ax, err] = compute_TRE(handles, fids, stx_fids)
     N = size(fids, 1); 
     fids = [fids, ones(N, 1)]; 
     T = handles.transform_matrix; 
     
     % Transform true fiducials 
-    trans_fids = (T*fids')';
-
-
-function [r_ax, a_ax, s_ax, err] = compute_TRE(handles, fids, stx_fids)
-    
-    % Transform true fiducials 
-    trans_fids = trans_fids_fcn(handles, fids); 
+    trans_fids = (T*fids')'; 
     
     % Fiducial registration error (FRE) 
     FRE2 = mean(sqrt(sum(((trans_fids(:, 1:3) - stx_fids).^2), 2))); 
     disp(['Mean FRE2 = ' num2str(FRE2)])
     
     mn_true = mean(fids, 1); 
-    N = size(fids, 1); 
     fids_demean = fids - repmat(mn_true, [N, 1]); 
     
     % Get principle axis of demeaned x/y/z 
@@ -2420,226 +2345,3 @@ pt2 = handles.mri_fiducials{val(2)}{2};
 distance = norm(pt1-pt2); 
 str = ['Distance: ' num2str(distance) ' mm']; 
 set(handles.fid_distance, 'String', str)
-
-
-% --- Executes on button press in plot_3d_surfaces_mri.
-function plot_3d_surfaces_mri_Callback(hObject, eventdata, handles)
-% hObject    handle to plot_3d_surfaces_mri (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-[filename, path] = uigetfile('*.gii','MultiSelect','on'); 
-
-% load surfaces; 
-surfaces = {}; 
-for i = 1:length(filename)
-    surfaces{i} = ft_read_headshape([path filename{i}], 'format', 'gifti', 'coordsys', 'acpc', 'unit', 'mm');
-end
-
-% colomap 
-cmap = cbrewer('qual', 'Set1', length(filename));
-
-% auto face alpha to 0.5
-facealpha = 0.5; 
-cfg = [];
-cfg.facecolor   = cmap;
-cfg.facealpha   = repmat(facealpha, 1, length(filename));
-cfg.fig_size    = [1 1];
-fig3d = plot_mesh_follow_me(cfg, surfaces);
-handles.fig3d = fig3d;
-guidata(hObject, handles);
-
-
-% --- Executes on button press in plot_3d_tracts_mri_coord.
-function plot_3d_tracts_mri_coord_Callback(hObject, eventdata, handles)
-% hObject    handle to plot_3d_tracts_mri_coord (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-if isfield(handles, 'fig3d') 
-    fig3d = handles.fig3d; 
-else
-    fig3d = []; 
-end
-
-figure(fig3d)
-hold all; 
-for i = 1:length(handles.electrode_tracts)
-    dat1 = handles.electrode_tracts{i}{2}; 
-    dat2 = handles.electrode_tracts{i}{3}; 
-    
-    plot3([dat1(1) dat2(1)], [dat1(2) dat2(2)], [dat1(3) dat2(3)],...
-        'linewidth', 3); 
-end
-x=10; 
-
-
-% --- Executes on button press in transform_stx_to_stx.
-function transform_stx_to_stx_Callback(hObject, eventdata, handles)
-% hObject    handle to transform_stx_to_stx (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-stx_1_val = get(handles.stereotax_selector2, 'Value'); 
-stxs1s = get(handles.stereotax_selector2, 'String'); 
-stx1 = stxs1s{stx_1_val}; 
-
-stx_2_val = get(handles.stereotax_selector_final, 'Value'); 
-stxs2s = get(handles.stereotax_selector_final, 'String'); 
-stx2 = stxs2s{stx_2_val}; 
-
-% for this surgery these should be MMA/MMB combo; 
-assert(strmatch(stx1(1:3), 'MMA') == 1)
-
-% This is not necessarily true -- may be MMC
-% assert(strmatch(stx2(1:3), 'MMB') == 1)
-
-% Both left or both right; 
-assert(strmatch(stx1(5:9), stx2(5:9))==1)
-
-% Get data
-[filename, path] = uigetfile('*.mat');
-dat = load([path filename]); 
-
-dat1 = dat.(stx1); 
-dat2 = dat.(stx2);
-
-offset = []; 
-
-for dim = 1:2
-    tmp = []; 
-    for pts = 1:3
-        if and(~isempty(dat1{pts}), ~isempty(dat2{pts}))
-            tmp = [tmp; dat1{pts}(dim) dat2{pts}(dim)]; 
-        else
-            disp(['Skipping pt ' num2str(pts)])
-        end
-    end
-    
-    % a + x = b 
-    % x = b - a
-    dtmp = tmp(:, 2) - tmp(:, 1); 
-    assert(all( abs(tmp(:, 1) + dtmp - tmp(:, 2)) < 10^-10))
-    disp(['Dim ' num2str(dim) ])
-    
-%     if dim == 2
-%         disp('If MMA_left pt 3, dim 2 was ')
-%         disp(tmp(end, 2) - mean(dtmp(1:(end-1))))
-%         disp('it might be fine!')
-%         disp('and offsets would be')
-%         dtmp2 = dtmp; 
-%         dtmp2(end) = tmp(end, 2) - (tmp(end, 2) - mean(dtmp(1:end-1))); 
-%         disp(dtmp2); 
-%         disp('but instead its this'); 
-%     end
-    disp(dtmp); 
-    offset = [offset mean(dtmp)]; 
-end
-
-
-if isfield(handles, 'mri_tgs_labels')
-    mri_tgs_labels = handles.mri_tgs_labels; 
-    % Add these to the 
-    list = {};
-    for i = 1:length(mri_tgs_labels)
-        list{i} = [mri_tgs_labels{i} ': ml ' num2str(handles.trans_mri_tgs(i, 1) + offset(1))...
-                                     ', ap ' num2str(handles.trans_mri_tgs(i, 2) + offset(2))]; 
-    end
-    
-    set(handles.stx_stx_transform, 'String', list); 
-end
-guidata(hObject, handles);
-
-
-
-
-% --- Executes on selection change in stx_stx_transform.
-function stx_stx_transform_Callback(hObject, eventdata, handles)
-% hObject    handle to stx_stx_transform (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hints: contents = cellstr(get(hObject,'String')) returns stx_stx_transform contents as cell array
-%        contents{get(hObject,'Value')} returns selected item from stx_stx_transform
-
-
-% --- Executes during object creation, after setting all properties.
-function stx_stx_transform_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to stx_stx_transform (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: listbox controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
-
-
-% --- Executes on selection change in stereotax_selector2.
-function stereotax_selector2_Callback(hObject, eventdata, handles)
-% hObject    handle to stereotax_selector2 (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hints: contents = cellstr(get(hObject,'String')) returns stereotax_selector2 contents as cell array
-%        contents{get(hObject,'Value')} returns selected item from stereotax_selector2
-
-
-% --- Executes during object creation, after setting all properties.
-function stereotax_selector2_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to stereotax_selector2 (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: popupmenu controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
-
-
-% --- Executes on selection change in stereotax_selector_final.
-function stereotax_selector_final_Callback(hObject, eventdata, handles)
-% hObject    handle to stereotax_selector_final (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hints: contents = cellstr(get(hObject,'String')) returns stereotax_selector_final contents as cell array
-%        contents{get(hObject,'Value')} returns selected item from stereotax_selector_final
-
-
-% --- Executes during object creation, after setting all properties.
-function stereotax_selector_final_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to stereotax_selector_final (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: popupmenu controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
-
-
-% --- Executes on button press in plot_3d_surface_stx.
-function plot_3d_surface_stx_Callback(hObject, eventdata, handles)
-% hObject    handle to plot_3d_surface_stx (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-
-% --- Executes on button press in plot_3d_tracts_stx_coord.
-function plot_3d_tracts_stx_coord_Callback(hObject, eventdata, handles)
-% hObject    handle to plot_3d_tracts_stx_coord (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-
-% --- Executes on button press in open_data_entry.
-function open_data_entry_Callback(hObject, eventdata, handles)
-% hObject    handle to open_data_entry (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Export the current predictions to new GUI to plot and save cortical errors
-x=10; 
-
