@@ -22,7 +22,7 @@ function varargout = Data_Entry_GUI(varargin)
 
 % Edit the above text to modify the response to help Data_Entry_GUI
 
-% Last Modified by GUIDE v2.5 04-Jun-2022 15:34:32
+% Last Modified by GUIDE v2.5 04-Jun-2022 23:25:14
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -81,6 +81,9 @@ if ~isempty(h)
     
     % set stx string here 
     set(handles.stx_name, 'String', [' Stx: ' g1data.data_table_stx]); 
+    
+    % set filenames / paths 
+    handles.mri_filename = g1data.mri_filename; 
     
 else
     disp('Cant access fiducial gui data'); 
@@ -218,10 +221,11 @@ function save_results_Callback(hObject, eventdata, handles)
 dataTable = get(handles.data_table, 'data'); 
 stx_name = get(handles.stx_name, 'String'); 
 
+% get path
+slashes = strfind(handles.mri_filename, '/'); 
+
 savenm = get(handles.save_name, 'String'); 
-save([savenm '.mat'], 'dataTable', 'stx_name'); 
-
-
+save([handles.mri_filename(1:slashes(end)) savenm '.mat'], 'dataTable', 'stx_name'); 
 
 
 function save_name_Callback(hObject, eventdata, handles)
@@ -270,4 +274,17 @@ guidata(hObject, handles);
 
 % Plot errors 
 plot_errors(handles)
+
+
+% --- Executes on button press in add_row.
+function add_row_Callback(hObject, eventdata, handles)
+% hObject    handle to add_row (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+dt = get(handles.data_table, 'data'); 
+dt{end+1, 1} = ' n/a'; 
+ 
+
+set(handles.data_table, 'data', dt); 
+guidata(hObject, handles);
 

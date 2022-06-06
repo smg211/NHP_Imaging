@@ -22,7 +22,7 @@ function varargout = Fiducial_GUI(varargin)
 
 % Edit the above text to modify the response to help Fiducial_GUI
 
-% Last Modified by GUIDE v2.5 04-Jun-2022 13:55:46
+% Last Modified by GUIDE v2.5 05-Jun-2022 11:47:53
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -655,7 +655,10 @@ function save_mri_fiducials_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 mri_filename = handles.mri_filename;
-fiducials_filename = [mri_filename(1:end-4) '_fiducials.mat'];
+
+dttim = datestr(now,'HH:MM:SS.FFF');
+fiducials_filename = [mri_filename(1:end-4) '_fiducials_' dttim '.mat'];
+
 mri_fiducials = handles.mri_fiducials;
 disp(['Saving mri fiducials ' fiducials_filename ]); 
 save(fiducials_filename, 'mri_fiducials');
@@ -958,7 +961,9 @@ stx_nms = get(handles.stereotax_selector, 'String');
 stereotax_id = get(handles.stereotax_selector, 'Value');
 stx_name = stx_nms{stereotax_id};
 
-fiducials_filename = [mri_filename(1:end-4) '_stereotax' stx_name '.mat'];
+dttim = datestr(now,'HH:MM:SS.FFF'); 
+
+fiducials_filename = [mri_filename(1:end-4) '_stereotax' stx_name dttim '.mat'];
 stereotax_fiducials = handles.stereotax_fiducials.(stx_name);
 stereotax_name = stx_name;
 save(fiducials_filename, 'stereotax_fiducials', 'stereotax_name');
@@ -1063,6 +1068,10 @@ end
 handles.mri_pts_indices = mri_pts_indices; 
 handles.stx_pts_indices = stx_pts_indices; 
 
+% All MRI fiducials
+handles.mri_pts = mri_pts; 
+handles.mri_pts_id = mri_pts_id; 
+
 mri_pts = mri_pts(mri_pts_indices, :); 
 stx_pts = stx_pts(stx_pts_indices, :); 
 
@@ -1087,9 +1096,9 @@ if ~isempty(mri_tgs)
     % Add these to the 
     list = {};
     for i = 1:length(mri_tgs_labels)
-        list{i} = [mri_tgs_labels{i} ': ml ' num2str(trans_mri_tgs(i, 1))...
-                                     ', ap ' num2str(trans_mri_tgs(i, 2))...
-                                     ', dv ' num2str(trans_mri_tgs(i, 3))]; 
+        list{i} = [mri_tgs_labels{i} ':    ml ' num2str(rd100th(trans_mri_tgs(i, 1)))...
+                                     ',    ap ' num2str(rd100th(trans_mri_tgs(i, 2)))...
+                                     ',    dv ' num2str(rd100th(trans_mri_tgs(i, 3)))]; 
     end
     
     handles.mri_tgs_labels = mri_tgs_labels; 
@@ -1099,6 +1108,9 @@ if ~isempty(mri_tgs)
 end
 guidata(hObject, handles);
 
+
+function xr = rd100th(x)
+xr = round(x*100)/100.; 
 
 % --- Executes on selection change in transformed_t.
 function transformed_t_Callback(hObject, eventdata, handles)
@@ -2434,12 +2446,16 @@ function plot_3d_surfaces_mri_Callback(hObject, eventdata, handles)
 % hObject    handle to plot_3d_surfaces_mri (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-[filename, path] = uigetfile('*.gii','MultiSelect','on'); 
+[filename, path] = uigetfile('*.stl','MultiSelect','on'); 
+
+if strmatch(class(filename), 'char')
+    filename = {filename}; 
+end
 
 % load surfaces; 
 surfaces = {}; 
 for i = 1:length(filename)
-    surfaces{i} = ft_read_headshape([path filename{i}], 'format', 'gifti', 'coordsys', 'acpc', 'unit', 'mm');
+    surfaces{i} = ft_read_headshape([path filename{i}], 'format', 'stl', 'coordsys', 'acpc', 'unit', 'mm');
 end
 
 % colomap 
@@ -2476,7 +2492,7 @@ for i = 1:length(handles.electrode_tracts)
     plot3([dat1(1) dat2(1)], [dat1(2) dat2(2)], [dat1(3) dat2(3)],...
         'linewidth', 3); 
 end
-x=10; 
+
 
 
 % --- Executes on button press in transform_stx_to_stx.
@@ -2539,9 +2555,9 @@ if isfield(handles, 'mri_tgs_labels')
     data_table = {}; 
     list = {};
     for i = 1:length(mri_tgs_labels)
-        list{i} = [mri_tgs_labels{i} ': ml ' num2str(handles.trans_mri_tgs(i, 1) + offset(1))...
-                                     ', ap ' num2str(handles.trans_mri_tgs(i, 2) + offset(2))...
-                                     ', dv ' num2str(handles.trans_mri_tgs(i, 3) + offset(3))]; 
+        list{i} = [mri_tgs_labels{i} ':    ml ' num2str(rd100th(handles.trans_mri_tgs(i, 1) + offset(1)))...
+                                     ',    ap ' num2str(rd100th(handles.trans_mri_tgs(i, 2) + offset(2)))...
+                                     ',    dv ' num2str(rd100th(handles.trans_mri_tgs(i, 3) + offset(3)))]; 
                                  
         % Data table for data GUI
         data_table{i} = {mri_tgs_labels{i}, ...
@@ -2633,18 +2649,35 @@ end
 
 
 % --- Executes on button press in plot_3d_surface_stx.
-function plot_3d_surface_stx_Callback(hObject, eventdata, handles)
+% function plot_3d_surface_stx_Callback(hObject, eventdata, handles)
 % hObject    handle to plot_3d_surface_stx (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
 
-% --- Executes on button press in plot_3d_tracts_stx_coord.
-function plot_3d_tracts_stx_coord_Callback(hObject, eventdata, handles)
-% hObject    handle to plot_3d_tracts_stx_coord (see GCBO)
+% --- Executes on button press in plot_3d_fids.
+function plot_3d_fids_Callback(hObject, eventdata, handles)
+% hObject    handle to plot_3d_fids (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+if isfield(handles, 'fig3d') 
+    fig3d = handles.fig3d; 
+else
+    fig3d = []; 
+end
 
+figure(fig3d)
+hold all; 
+
+mri_pts = handles.mri_pts; 
+mri_pts_id = handles.mri_pts_id; 
+
+for i = 1:size(mri_pts,1)
+    plot3(mri_pts(i, 1), mri_pts(i, 2), mri_pts(i, 3),...
+        'c*', 'Markersize', 20); 
+    text(mri_pts(i, 1), mri_pts(i, 2), mri_pts(i, 3),...
+        ['f_' num2str(mri_pts_id(i))]); 
+end
 
 % --- Executes on button press in open_data_entry.
 function open_data_entry_Callback(hObject, eventdata, handles)
