@@ -73,15 +73,21 @@ if ~isempty(h)
     tableData = get(handles.data_table,'data');
     
     % set stx data 
-    [tableData, N] = populate_data_table(tableData, g1data.data_table);
-    handles.N = N; 
-    
+    try
+        [tableData, N] = populate_data_table(tableData, g1data.data_table);
+        handles.N = N; 
+    catch
+        x=10;
+    end
     % set table data again
     set(handles.data_table, 'data', tableData); 
     
+    try
     % set stx string here 
     set(handles.stx_name, 'String', [' Stx: ' g1data.data_table_stx]); 
-    
+    catch
+        x=10;
+    end
     % set filenames / paths 
     handles.mri_filename = g1data.mri_filename; 
     
