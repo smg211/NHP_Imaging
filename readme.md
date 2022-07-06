@@ -1,25 +1,31 @@
 ## Welcome! 
-This document applies to the FieldTrip- and AFNI-based pipeline for volume-based registration of NHP MRIs to a template MRI, segmentation and parcellation of T1 MRIs according to atlases, creation of ROI surfaces (triangulated meshes) in native subject space, and conversion of MRI voxels within an intensity range to surfaces (e.g., for overlaying veins and/or arteries on the cortex).
+This is a two-part document that applies to the main two parts of this repository. 
 
-## The functions and scripts addressed in this document are:
+Part I applies to the FieldTrip- and AFNI-based pipeline for volume-based registration of NHP MRIs to a template MRI, segmentation and parcellation of T1 MRIs according to atlases, creation of ROI surfaces (triangulated meshes) in native subject space, and conversion of MRI voxels within an intensity range to surfaces (e.g., for overlaying veins and/or arteries on the cortex).
+
+Part II applies to a GUI that is used for registration of a stereotaxic surgical space to a specific NHP's MRI using skin (or any) fiducials that are visible in the MRI and can be measured in stereotaxic surgical space. This GUI's method is still in development, and is heavily based on work from the following publication: "Bentley JN, Khalsa SS, Kobylarek M, Schroeder KE, Chen K, Bergin IL, Tat DM, Chestek CA, Patil PG. A simple, inexpensive method for subcortical stereotactic targeting in nonhuman primates. Journal of Neuroscience Methods. 2018 Jul 15;305:89-97"
+
+A typical surgery prep will consist of running T1 MRIs through the pipeline in Part I and using the surfaces to identify points of interest (e.g. brain regions) to expose or target with electrodes during the surgical procedure. In part II, these points of interest can be marked in MRI space, and transformed to stereotax space for more accurate targeting. 
+
+## Part I: The functions and scripts addressed in Part I are: 
 - AFNI_PreProc_Prep.m
 - AFNI_PreProc.m
 - AFNI_Surfaces_PostProc.m
 - Voxel_to_Surface.m
 - plot_mesh_follow_me.m
 
-## Requirements:
+## Part I: Requirements:
 - FieldTrip (Matlab toolbox): https://www.fieldtriptoolbox.org/
 - Analysis of Functional NeuroImages (AFNI): https://afni.nimh.nih.gov/
 - Recommended: FreeView (part of FreeSurfer): https://surfer.nmr.mgh.harvard.edu/
 
-## This pipeline is currently set up to use AFNI's templates and atlases
+## Part I: This pipeline is currently set up to use AFNI's templates and atlases
 - Template: NMT v2.0
 - Cortical Atlas: Cortical Hierarchical Atlas for Rhesus Macaques (CHARM)
 - Subcortical Atlas: Subcortical Atlas for Rhesus Macaques (SARM)
 For more info: https://afni.nimh.nih.gov/pub/dist/doc/htmldoc/nonhuman/macaque_tempatl/main_toc.html
 
-## Step-by-Step Instructions
+## Part I: Step-by-Step Instructions
 Each script is structured to ask you to enter the relevant parameters in the first section, and then the rest of the script is automated. 
 
 ### Step 0 (see note): AFNI_PreProc_Prep.m
@@ -44,9 +50,72 @@ Additionally, you can filter the voxels included in the surface so that only tho
 
 Note: before running this script, you will need to explore the intensity values of the volume of interest in order to identify the intensity range that you want to include in your mesh. FreeView can be used for this purpose, but most MRI viewers have a similar ability to identify voxel intensity values
 
+#### Questions on Part I? sandon.griffin@ucsf.edu
 
 
-#### Questions? sandon.griffin@ucsf.edu
+## Part II: Requirements
+- You'll need to make sure you have your T1 MRI in an .nii format (can be done in the early steps of AFNI_PreProc.m) 
+- You'll also need to make sure that you have fiducials in your MRI that you'll be able to measure at the time of your surgery
+- Our approach has been to place these circular "donut" fiducials (https://izimed.com/products/multi-modality-fiducial-markers) on and around the animals' shaved head prior to the MRI, while the animal is in a stereotax. Then, after the scan is complete and while the animal is still in the steretax, the center of each fiducial is permanently marked on the animals' skin with a tattooing needle. Other examples of fiducials are given in the studies below. The effect of fiducial placement on targeting error is well-covered in the Bentley study. Another consideration re. fiducial placement is making sure you'll actually be able to measure your fiducials in the OR with the tools you're planning on using.  We used a micromanipulator which only had a certain amount of medial-lateral travel, preventing us from accessing very lateral fiducials as well as fiducials on the opposite hemisphere. 
+
+- - Bentley JN, Khalsa SS, Kobylarek M, Schroeder KE, Chen K, Bergin IL, Tat DM, Chestek CA, Patil PG. A simple, inexpensive method for subcortical stereotactic targeting in nonhuman primates. Journal of Neuroscience Methods. 2018 Jul 15;305:89-97
+- - Glud, A.N., Bech, J., Tvilling, L., Zaer, H., Orlowski, D., Fitting, L.M., Ziedler, D., Geneser, M., Sangill, R., Alstrup, A.K.O., et al. (2017). A fiducial skull marker for precise MRI-based stereotaxic surgery in large animal models. Journal of Neuroscience Methods 285, 45–48. https://doi.org/10.1016/j.jneumeth.2017.04.017.
+- - Ohayon, S., and Tsao, D.Y. (2012). MR-guided stereotactic navigation. Journal of Neuroscience Methods 204, 389–397. https://doi.org/10.1016/j.jneumeth.2011.11.031.
+
+- Recommended: Slicer3D (free surface viewer) 
+
+## Part II: The functions and scripts addressed in Part II are: 
+- Fiducial_GUI.m and Fiducial_GUI.fig
+
+## Part II: Step-by-Step Instructions 
+### Step 0: Setup paths and Launch the GUI
+If you haven't already added the directory and subdirectories to the NHP_imaging repo, do so now ("addpath(genpath('path to NHP_imaging repo'))"). Then launch the Fiducial GUI by executing "Fiducial_GUI"
+
+###: Step 1: Create a numbering convention for your fiducials
+In this methodology you are going to mark fiducial points on your MRI, and then measure the same points using a micromanipulator. To keep track of which point is which, you'll want to come up with a numbering system where you assign each fiducial a number. I usually do this in Slicer3D by thresholding the MRI to see all the fiducials, taking a few screenshots, and then labeling the fiducials. See the video "Create_fiducial_numbering.mp4" to see this in more detail. Doing this step in Slicer3D will also help with step 2. 
+
+### Step 1: Load the MRI
+Click the "Load MRI" button on the top left of the GUI. Navigate to wherever your ".nii" file is and select it. Note that the axes ("coronal", "sag", "axial") all assume you've followed the full set of Part I steps outlined above. 
+
+### Step 2: Identify fiducials and points of interest
+Once the MRI is loaded, you can navigate around using the sliders above each axis, or by directly entering values into the ML, AP, or DV text entry boxes. Now your job is to identify the precise points of the fiducials. I like to do this using Slicer3D, and then do fine adjustments in the GUI. See the "MRI_navigation_and_fiducial_entry.mp4" video for how I do this. A few tips: 
+- Use the shift + click to drag around the cross hairs in Slicer 3D. This makes it easy to align the crosshairs with a specific fiducial in the 3D model and then make all the slices align to the cross hair. You can then just read out the ML/AP/DV values from the slices and enter them into the GUI. I usually do fine adjustments in the GUI after this. 
+- When you are satisfied with the position of a fiducial in the GUI, type "f_#" where "#" is the fiducial number into the text box and click the (+) button. If you'd like to change a fiducial's location you can select it and click the (-) button and it will be removed. 
+- If the list of fiducials gets grayed out (ListBox error) just add a fiducial a few times (+) and then subtract it (-) to fix the box. 
+- To identify points of interest (i.e. anything thats not a fiducial that you'd like to transform into stereotax space like a deep brain target), add that point with the prefix "t_" (t is for "target", f is for "fiducial"). 
+
+### Step 3: Save out your fiducials 
+- Once you are happy with your fiducials and targets list, click "save fiducials". These will then get saved in the same folder as your MRI for accessibility later. 
+
+### Step 4: Planning for the OR
+In the OR, the general steps are to 1) measure the fiducials and enter them into the GUI, 2) transform your points of interest to stereotaxic coordinate space using the GUI, and 3) design an approach to your points of interest if relevant (e.g. for deep brain structures). You need to think through sterility and timing and what tool you use to measure the skin vs mark the skull vs insert electrodes. Since we used skin fiducials we needed to measure the skin marks using an instrument and micromanipulator that could remain non-sterile, and do it before the first incision (after incision skin fiducials are useless). If you use skull fidiucials you can use the same tool to measure and then mark / target your points. This is attractive since changing instruments used to measure the tools is potentially a large source of variability. If you are using this approach to insert electrodes, you'll want to make sure that the tool you use to insert the electrodes can also be used to measure and that you use the tool in the same geometry each time. 
+
+An example protocol: 
+- Use micromanipulator A (non-sterile) to measure skin fiducials while animal is in the stereotax but before sterile field is prepped 
+- After incision / craniotomy, use micromanipulator B (sterile) with electrode holder to insert electrodes to deep brain targets. 
+- Ahead of time, need to know the transform between MMA with measuring tool and MMB with electrode insertion tool. 
+- Then need to sterilize MMB and insertion tool
+
+Tip: 
+- Practice reading ML/AP/DV coordinates off your micromanipulator ahead of time. On the stereotax arms, know where AP transitions from + to negative. 
+
+### Step 5: Measuring skin fiducials
+Using the same fiducial numbering system as above, enter micromanipulator measurements for each fiducial. As outlined in the Bentley paper, your stereotax coordinate system must be the same "handedness" as your MRI coordinate system. If you follow Part I, your MRI will be in "RAS" meaning the coordinates will be ML (increasing going Right), AP (increasing going Anterior), and DV (increasing going Superior). If you place your micromanipulator on the right arm of the stereotax you should be able to reach off coordinates as they are. If you place your micromanipulator on the left arm, you'll need to keep the ML coordinates negative. This is because micromanipulators have low numbers for medial coordinates and high numbers for lateral coordinates. This is fine for the right arm where lateral coordinates are Right of medial coordinates, but for the left arm, this coordinate system could constitute a change in handedness. Making all ML coordinates when the micromanipulator is on the left arm fixes this. 
+
+Procedure to enter fiducials in the GUI: 
+- Same as the fiducial entry procedure above
+- Not all fiducials need to be measured -- only the ones that are measured will be used to fit the transform
+
+Tips: 
+- Some micromanipulators come with an AP adjustment block ("AP_blk") in addtion to the AP coordinate read off of the base of the micromanipulator. If there's no AP block, just enter "0" there. The AP_blk and AP measurement just get added together in the code. 
+
+### Step 6: Fit and test the transform
+Once all the fiducials have been measured, use the "transform fid to stx" button to fit the MRI to stereotax transform. Use the "Calc TRE" button to illustrate the errors in the fiducials. There will be two plots -- one that illustrates the discrepancy between the measured fiducial points (red) and what their predicted position is (in black) based on the transform. On the right you'll also see a bar plot with the errors in the ML/AP/DV dimensions. Because these datapoints are the ones used to fit the transform, the avg. error should be around 0mm. The variance may vary though. The second plot is the one demonstrating the 'target registration error' in different points in stereotaxic space, and is based on the error in the fiducials. See Bentley et. al. for a more detailed description of TRE. See "Transform_fid_to_stx" video for more information. 
+
+Tips: 
+- If a particular fiducial looks particularly erroneous based on these plots, you can re-measure it. Remove the point using the (-) sign from the fiducial GUI and re-enter it. You can also then re-save the new measured fiducials (will save with a new timestamp, so you dont need to worry about over-writting)
+- Make sure to select the correct micromanipulator from the drop-down menu prior to entering fiducial measurements. These can be edited by opening up the matlab fig file (Fiducial_GUI.fig) and directly editing the options for the dropdown. 
+
 
 
 
