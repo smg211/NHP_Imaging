@@ -98,6 +98,7 @@ An example protocol:
 
 Tip: 
 - Practice reading ML/AP/DV coordinates off your micromanipulator ahead of time. On the stereotax arms, know where AP transitions from + to negative. 
+- For debugging, its helpful to make a dummy skin fiducials file. You can do this using the "helpers/make_noisy_fiducials_for_testing.m" file. Its only input is a noise value, and it will ask you for a fiducials file. It will then save a dummy skin fiducials file in that same directory using the stereotax name "test"
 
 ### Step 6: Measuring skin fiducials
 Using the same fiducial numbering system as above, enter micromanipulator measurements for each fiducial. As outlined in the Bentley paper, your stereotax coordinate system must be the same "handedness" as your MRI coordinate system. If you follow Part I, your MRI will be in "RAS" meaning the coordinates will be ML (increasing going Right), AP (increasing going Anterior), and DV (increasing going Superior). If you place your micromanipulator on the right arm of the stereotax you should be able to reach off coordinates as they are. If you place your micromanipulator on the left arm, you'll need to keep the ML coordinates negative. This is because micromanipulators have low numbers for medial coordinates and high numbers for lateral coordinates. This is fine for the right arm where lateral coordinates are Right of medial coordinates, but for the left arm, this coordinate system could constitute a change in handedness. Making all ML coordinates when the micromanipulator is on the left arm fixes this. 
