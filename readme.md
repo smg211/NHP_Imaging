@@ -71,23 +71,23 @@ Note: before running this script, you will need to explore the intensity values 
 ### Step 0: Setup paths and Launch the GUI
 If you haven't already added the directory and subdirectories to the NHP_imaging repo, do so now ("addpath(genpath('path to NHP_imaging repo'))"). Then launch the Fiducial GUI by executing "Fiducial_GUI"
 
-###: Step 1: Create a numbering convention for your fiducials
+### Step 1: Create a numbering convention for your fiducials
 In this methodology you are going to mark fiducial points on your MRI, and then measure the same points using a micromanipulator. To keep track of which point is which, you'll want to come up with a numbering system where you assign each fiducial a number. I usually do this in Slicer3D by thresholding the MRI to see all the fiducials, taking a few screenshots, and then labeling the fiducials. See the video "Create_fiducial_numbering.mp4" to see this in more detail. Doing this step in Slicer3D will also help with step 2. 
 
-### Step 1: Load the MRI
+### Step 2: Load the MRI
 Click the "Load MRI" button on the top left of the GUI. Navigate to wherever your ".nii" file is and select it. Note that the axes ("coronal", "sag", "axial") all assume you've followed the full set of Part I steps outlined above. 
 
-### Step 2: Identify fiducials and points of interest
+### Step 3: Identify fiducials and points of interest
 Once the MRI is loaded, you can navigate around using the sliders above each axis, or by directly entering values into the ML, AP, or DV text entry boxes. Now your job is to identify the precise points of the fiducials. I like to do this using Slicer3D, and then do fine adjustments in the GUI. See the "MRI_navigation_and_fiducial_entry.mp4" video for how I do this. A few tips: 
 - Use the shift + click to drag around the cross hairs in Slicer 3D. This makes it easy to align the crosshairs with a specific fiducial in the 3D model and then make all the slices align to the cross hair. You can then just read out the ML/AP/DV values from the slices and enter them into the GUI. I usually do fine adjustments in the GUI after this. 
 - When you are satisfied with the position of a fiducial in the GUI, type "f_#" where "#" is the fiducial number into the text box and click the (+) button. If you'd like to change a fiducial's location you can select it and click the (-) button and it will be removed. 
 - If the list of fiducials gets grayed out (ListBox error) just add a fiducial a few times (+) and then subtract it (-) to fix the box. 
 - To identify points of interest (i.e. anything thats not a fiducial that you'd like to transform into stereotax space like a deep brain target), add that point with the prefix "t_" (t is for "target", f is for "fiducial"). 
 
-### Step 3: Save out your fiducials 
+### Step 4: Save out your fiducials 
 - Once you are happy with your fiducials and targets list, click "save fiducials". These will then get saved in the same folder as your MRI for accessibility later. 
 
-### Step 4: Planning for the OR
+### Step 5: Planning for the OR
 In the OR, the general steps are to 1) measure the fiducials and enter them into the GUI, 2) transform your points of interest to stereotaxic coordinate space using the GUI, and 3) design an approach to your points of interest if relevant (e.g. for deep brain structures). You need to think through sterility and timing and what tool you use to measure the skin vs mark the skull vs insert electrodes. Since we used skin fiducials we needed to measure the skin marks using an instrument and micromanipulator that could remain non-sterile, and do it before the first incision (after incision skin fiducials are useless). If you use skull fidiucials you can use the same tool to measure and then mark / target your points. This is attractive since changing instruments used to measure the tools is potentially a large source of variability. If you are using this approach to insert electrodes, you'll want to make sure that the tool you use to insert the electrodes can also be used to measure and that you use the tool in the same geometry each time. 
 
 An example protocol: 
@@ -99,7 +99,7 @@ An example protocol:
 Tip: 
 - Practice reading ML/AP/DV coordinates off your micromanipulator ahead of time. On the stereotax arms, know where AP transitions from + to negative. 
 
-### Step 5: Measuring skin fiducials
+### Step 6: Measuring skin fiducials
 Using the same fiducial numbering system as above, enter micromanipulator measurements for each fiducial. As outlined in the Bentley paper, your stereotax coordinate system must be the same "handedness" as your MRI coordinate system. If you follow Part I, your MRI will be in "RAS" meaning the coordinates will be ML (increasing going Right), AP (increasing going Anterior), and DV (increasing going Superior). If you place your micromanipulator on the right arm of the stereotax you should be able to reach off coordinates as they are. If you place your micromanipulator on the left arm, you'll need to keep the ML coordinates negative. This is because micromanipulators have low numbers for medial coordinates and high numbers for lateral coordinates. This is fine for the right arm where lateral coordinates are Right of medial coordinates, but for the left arm, this coordinate system could constitute a change in handedness. Making all ML coordinates when the micromanipulator is on the left arm fixes this. 
 
 Procedure to enter fiducials in the GUI: 
@@ -109,7 +109,7 @@ Procedure to enter fiducials in the GUI:
 Tips: 
 - Some micromanipulators come with an AP adjustment block ("AP_blk") in addtion to the AP coordinate read off of the base of the micromanipulator. If there's no AP block, just enter "0" there. The AP_blk and AP measurement just get added together in the code. 
 
-### Step 6: Fit and test the transform
+### Step 7: Fit and test the transform
 Once all the fiducials have been measured, use the "transform fid to stx" button to fit the MRI to stereotax transform. Use the "Calc TRE" button to illustrate the errors in the fiducials. There will be two plots -- one that illustrates the discrepancy between the measured fiducial points (red) and what their predicted position is (in black) based on the transform. On the right you'll also see a bar plot with the errors in the ML/AP/DV dimensions. Because these datapoints are the ones used to fit the transform, the avg. error should be around 0mm. The variance may vary though. The second plot is the one demonstrating the 'target registration error' in different points in stereotaxic space, and is based on the error in the fiducials. See Bentley et. al. for a more detailed description of TRE. See "Transform_fid_to_stx" video for more information. 
 
 Tips: 
