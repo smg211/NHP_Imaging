@@ -54,6 +54,11 @@ Note: before running this script, you will need to explore the intensity values 
 
 
 ## Part II: Requirements
+Software: 
+- Slicer3D (free surface viewer) : https://www.slicer.org/
+- FieldTrip (Matlab toolbox): https://www.fieldtriptoolbox.org/
+
+MRI requirements: 
 - You'll need to make sure you have your T1 MRI in an .nii format (can be done in the early steps of AFNI_PreProc.m) 
 - You'll also need to make sure that you have fiducials in your MRI that you'll be able to measure at the time of your surgery
 - Our approach has been to place these circular "donut" fiducials (https://izimed.com/products/multi-modality-fiducial-markers) on and around the animals' shaved head prior to the MRI, while the animal is in a stereotax. Then, after the scan is complete and while the animal is still in the steretax, the center of each fiducial is permanently marked on the animals' skin with a tattooing needle. Other examples of fiducials are given in the studies below. The effect of fiducial placement on targeting error is well-covered in the Bentley study. Another consideration re. fiducial placement is making sure you'll actually be able to measure your fiducials in the OR with the tools you're planning on using.  We used a micromanipulator which only had a certain amount of medial-lateral travel, preventing us from accessing very lateral fiducials as well as fiducials on the opposite hemisphere. 
@@ -62,7 +67,7 @@ Note: before running this script, you will need to explore the intensity values 
 - - Glud, A.N., Bech, J., Tvilling, L., Zaer, H., Orlowski, D., Fitting, L.M., Ziedler, D., Geneser, M., Sangill, R., Alstrup, A.K.O., et al. (2017). A fiducial skull marker for precise MRI-based stereotaxic surgery in large animal models. Journal of Neuroscience Methods 285, 45–48. https://doi.org/10.1016/j.jneumeth.2017.04.017.
 - - Ohayon, S., and Tsao, D.Y. (2012). MR-guided stereotactic navigation. Journal of Neuroscience Methods 204, 389–397. https://doi.org/10.1016/j.jneumeth.2011.11.031.
 
-- Recommended: Slicer3D (free surface viewer) 
+
 
 ## Part II: The functions and scripts addressed in Part II are: 
 - Fiducial_GUI.m and Fiducial_GUI.fig
