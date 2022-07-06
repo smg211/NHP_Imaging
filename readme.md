@@ -116,7 +116,36 @@ Tips:
 - If a particular fiducial looks particularly erroneous based on these plots, you can re-measure it. Remove the point using the (-) sign from the fiducial GUI and re-enter it. You can also then re-save the new measured fiducials (will save with a new timestamp, so you dont need to worry about over-writting)
 - Make sure to select the correct micromanipulator from the drop-down menu prior to entering fiducial measurements. These can be edited by opening up the matlab fig file (Fiducial_GUI.fig) and directly editing the options for the dropdown. 
 
+### Step 8: Electrode targeting to deep strutures. 
+See the "Plan electrode insertion" video. Briefly, you design an electrode track that is a straight down 0 degree insertion in stereotax space. This may end up looking angled in MRI space. Once the track is plotted, you can navigate in the MRI and mark your insertion point. Then you can transform this insertion point to stereotax space. 
 
+### Step 9: Prep to transform from skin stereotax space 1 --> brain stereotax space 2
+If you're using skin fiducials and need to measure them using a different tool than the one you want to use to mark insertion points or skull points (i.e. due to sterility reasons), there's a final transform you'll need to do in order to transform points from the "skin/non-sterile" stereotax space to the "brain/sterile" stereotax space. To set this up there are a few steps required. Also see "stx to stx conversion" video: 
+
+- name your tools (I labeled micromanipulators as A/B/C, then labled the tools attached to the micromanipulators as "meas" for measuring tool, "edge" for Edge electrode inserter, and "DBS" for DBS electrode inserter)
+- change the dropdown menus to reflect these names. Since I was only ever going to measure with "meas" I used MMA_meas as my main measuring tool. Note you'll also need to list which arm of of the stereotax the micromanipulator is on since mounting it to the left vs. right create different coordinate systems (hence MMA_right_meas, MMA_left_meas). 
+- perform an experiment where you measure a few common points using the different micromanipulator and tool combinations. I write down the ML / AP / DV coordinates of each micromanipultor-tool combo for each point in a matlab file called stx_conversion.m saved for each animal / MRI. This file then saves out a .mat file that needs to be loaded when you do a stx-->stx conversion. 
+- See an example of a stx_conversion.m file and stx_conversion.mat file in "helpers/example_stx_conversion"
+
+### Step 10: Measuring cortical landmarks or others
+Once youve transformed your points of interest into the desired micromanipulator+tool space, you can write down measurements, save them, and plot them by clicking the "open data entry" button on the bottom right of the GUI. Here you'll see your transformed stereotax points and you can edit the right columns. At the top you'll find save and plot buttons. See the "stx to stx conversion" video for more details. 
+
+### Other features: 
+See the "other features" video for more details: 
+- Left panel: 
+- compute distance button
+- go to fiducial button
+- clim max button
+
+- Right panel: 
+- Show 3D surfaces button
+- Add 3D electrode tracts
+
+
+- Middle panel: 
+- Save all
+
+#### Questions on Part II? preeya.khanna@ucsf.edu or pkhanna@berkeley.edu
 
 
 
