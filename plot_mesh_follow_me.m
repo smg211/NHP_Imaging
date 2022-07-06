@@ -1,4 +1,4 @@
-function plot_mesh_follow_me(cfg, mesh)
+function fig1 = plot_mesh_follow_me(cfg, mesh)
 % plot meshes in a figure that allows the light source to follow the view angle
 %
 % Use as:
@@ -58,7 +58,7 @@ if length(facealpha) == 1
   facealpha = repmat(facealpha, 1, nmesh);
 end
 
-figure('units','normalized','outerposition', fig_loc_size); hold on;
+fig1 = figure('units','normalized','outerposition', fig_loc_size); hold on;
 set(gca, 'XTick', [])
 set(gca, 'YTick', [])
 set(gca, 'ZTick', [])
@@ -67,10 +67,11 @@ set(gca, 'YColor','none')
 set(gca, 'ZColor','none')
 
 % added to make axes not squish the brain
-axis('square'); 
+axis('equal'); 
 
 axes('buttondownfcn', @buttondownfcn);  % assign callback
 set(gca,'NextPlot','add');              % add next plot to current axis
+axis('equal'); 
 
 for m = 1:nmesh
   hs = patch('Vertices', mesh{m}.pos, 'Faces', mesh{m}.tri, ...
@@ -91,6 +92,7 @@ set(c,'style','infinite');              % set style of light
     oloc = get(0,'PointerLocation');    % get starting point
     set(fig,'windowbuttonmotionfcn',{@rotationcallback,ax,oloc,oaz,oel});
     set(fig,'windowbuttonupfcn',{@donecallback});
+    axis('equal'); 
   end
 
   function rotationcallback(~,~,ax,oloc,oaz,oel)
@@ -102,12 +104,14 @@ set(c,'style','infinite');              % set style of light
     newel = oel-dy/factor;              % calculate new elevation
     view(ax,newaz,newel);               % adjust view
     c = camlight(c,'headlight');        % adjust light
+    axis('equal'); 
   end
 
   function donecallback(src,~)
     fig = ancestor(src,'figure');           % get figure handle
     set(fig,'windowbuttonmotionfcn',[]);    % unassign windowbuttonmotionfcn
     set(fig,'windowbuttonupfcn',[]);        % unassign windowbuttonupfcn
+    axis('equal'); 
   end
 
 end
