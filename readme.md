@@ -15,6 +15,7 @@ A typical surgery prep will consist of running T1 MRIs through the pipeline in P
 - plot_mesh_follow_me.m
 
 ## Part I: Requirements:
+- Matlab (and image processing toolbox)
 - FieldTrip (Matlab toolbox): https://www.fieldtriptoolbox.org/
 - Analysis of Functional NeuroImages (AFNI): https://afni.nimh.nih.gov/
 - Recommended: FreeView (part of FreeSurfer): https://surfer.nmr.mgh.harvard.edu/
