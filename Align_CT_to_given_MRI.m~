@@ -31,6 +31,7 @@ ft_sourceplot([], ct);
 % similarly to the MRI as possible)
 cfg = [];
 cfg.method      = 'nearest';
+% cfg.resolution  = 0.4082; % min([1 ct_acpc.hdr(1).PixelSpacing(1) ct_acpc.hdr(1).PixelSpacing(2)]);
 cfg.xrange      = input('Enter the minimum and maximum X (left --> right) headspace coordinate in the form [min max]: \n');
 cfg.yrange      = input('Enter the minimum and maximum Y (posterior --> anterior) headspace coordinate in the form [min max]: \n');
 cfg.zrange      = input('Enter the minimum and maximum Z (inferior --> superior) headspace coordinate in the form [min max]: \n');
@@ -56,15 +57,11 @@ cfg.method      = 'interactive';
 cfg.coordsys    = 'acpc';
 ct_acpc = ft_volumerealign(cfg, ct_crop);
 
-% iMPORTANT: When selecting coordinates
-% 1. AC should be at the same point where the origin in the MRI is
-% 2. PC should be selected such that if you drew a line from AC --> PC you
+% When selecting coordinates
+% AC should be at the same point where the origin in the MRI is
+% PC should be selected such that if you drew a line from AC --> PC you
 % would be moving negatively in the anterior-posterior axis, as defined by
-% the anterior-posterior axis in the MRI
-% 3. XZ point should be selected such that if you drew a line from AC -->
-% XZ you would be moving positively in the inferior-superior axis, as
-% defined by the inferior-superior axis in the MRI
-% 4. Right point can be any point on the right side of the brain
+% the anterior-posterior axis in the MRI (
 
 % plot the MRI so you can note the approximate position of the origin
 ft_sourceplot([], ct_acpc);

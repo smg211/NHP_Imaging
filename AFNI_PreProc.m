@@ -3,7 +3,7 @@
 
 %% ENTER SETTINGS
 clear all
-img_dir = '/Users/Sandon/Box/Data/NHP_Imaging'; % path to NHP imaging data
+img_dir = '/Users/Sandon/Library/CloudStorage/Box-Box/Data/NHP_Imaging'; 
 subid = 'Haribo'; % animal name
 scan_dir = 'ds_2021-08-26_10-07'; % name of folder where the raw DICOM files are located
 min_slices2convert = 40; % minimum number of files in an imaging directory in order to trigger aconversion to nifti
@@ -74,7 +74,7 @@ for f = 1:length(fnames)
   end
 end
 
-nscans = length(img_pre{v});
+nscans = length(img_pre);
 
 % save the names of the scans we are putting through the pipeline
 save([afni_dir filesep 'scan_prefixes.mat'], 'img_pre');
@@ -176,7 +176,10 @@ end
 ft_sourceplot([], img_acpc_nmt2{i_highres});
 
 % Enter the coordinates where you want to crop (get within a few mm of the
-% edge of the brain but make sure not to crop any of the brain!)
+% edge of the skull but make sure not to crop any of the skull surrounding 
+% the brain, because the skull will be vital for fusing the CT to any MRI.
+% It's okay to crop out parts of the skull inferior to the foramen magnum. 
+% Often helpful to leave at least part of the orbits too.)
 cfg = [];
 cfg.method      = 'nearest';
 cfg.resolution  = min([img_acpc_nmt2{i_highres}.hdr.xsize img_acpc_nmt2{i_highres}.hdr.ysize img_acpc_nmt2{i_highres}.hdr.zsize]);
